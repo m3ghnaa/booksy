@@ -24,8 +24,19 @@ const bookSlice = createSlice({
       state.wantToRead = [];
       state.finishedReading = [];
     },
+    addToReadingList: (state, action) => {
+        const { book, category } = action.payload;
+        const newBook = {
+          googleBookId: book.id,
+          title: book.volumeInfo.title,
+          authors: book.volumeInfo.authors,
+          thumbnail: book.volumeInfo.imageLinks?.thumbnail,
+          pageCount: book.volumeInfo.pageCount,
+        };
+        state[category].push(newBook);
+      },
   },
 });
 
-export const { setBooks, clearBooks } = bookSlice.actions;
+export const { setBooks, clearBooks, addToReadingList } = bookSlice.actions;
 export default bookSlice.reducer;

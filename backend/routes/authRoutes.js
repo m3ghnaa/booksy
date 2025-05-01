@@ -197,4 +197,23 @@ router.get('/protected-route', protect, async (req, res) => {
   }
 });
 
+router.post('/books', protect, async (req, res) => {
+  const { category, googleBookId, title, authors, thumbnail, pageCount } = req.body;
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(400).json({ message: 'User not found' });
+
+    const newBook = new Book({ googleBookId, title, authors, thumbnail, pageCount, userId: user._id });
+
+    // Add book to the appropriate category
+    user.books[category].push(newBook);
+    await user.save();
+
+    res.status(200).json({ message: 'Book added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
