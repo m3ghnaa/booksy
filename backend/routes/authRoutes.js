@@ -6,6 +6,7 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const bcrypt = require('bcrypt');
+const Book = require('../models/Book');
 
 // Endpoint to start Google authentication
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -173,13 +174,26 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/protected-route', protect, (req, res) => {
+router.get('/protected-route', protect, async (req, res) => {
   try {
-    console.log("User info from token:", req.user);
-    res.json({ message: 'You are authorized!', user: req.user });
+    const user = await User.findById(req.user.id).select('-password'); // exclude password
+
+    // Example: Assume each book has a `status` field like "currentlyReading", "wantToRead", etc.
+    const books = await Book.find({ user: req.user.id });
+
+    const categorizedBooks = {
+      currentlyReading: books.filter(book => book.status === 'currentlyReading'),
+      wantToRead: books.filter(book => book.status === 'wantToRead'),
+      finishedReading: books.filter(book => book.status === 'finishedReading')
+    };
+
+    res.status(200).json({
+      user,
+      books: categorizedBooks
+    });
   } catch (err) {
-    console.error("Error in protected-route:", err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 
