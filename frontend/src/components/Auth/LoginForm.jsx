@@ -14,7 +14,7 @@ function LoginForm() {
     e.preventDefault();
     try {
       await login(formData);
-      navigate("/dashboard"); // assuming we will make dashboard after login
+      navigate("/dashboard");
     } catch (error) {
       console.error(error.response?.data?.message || "Login failed");
     }
@@ -27,27 +27,21 @@ function LoginForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token: response.credential }), // Send the token to the backend
+        body: JSON.stringify({ token: response.credential }),
       });
 
       const data = await res.json();
 
       if (data.token) {
-        // Save the token in localStorage or cookies
         localStorage.setItem("token", data.token);
-        navigate("/dashboard"); // Redirect to dashboard
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error("Google login failed", error);
     }
   };
 
-  const handleGoogleLoginError = () => {
-    console.log("Google login failed");
-  };
-
   React.useEffect(() => {
-    /* global google */
     google.accounts.id.initialize({
       client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
       callback: handleGoogleLoginSuccess,
@@ -70,7 +64,7 @@ function LoginForm() {
       </div>
       <button type="submit" className="btn btn-primary">Login</button>
 
-      <div className="my-3" id="google-signin-btn"></div> {/* Google sign-in button */}
+      <div className="my-3" id="google-signin-btn"></div>
 
       <p>
         Don't have an account? <a href="/signup">Sign up with Google or create one</a>

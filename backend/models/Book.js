@@ -11,6 +11,10 @@ const BookSchema = new mongoose.Schema({
     type: String,
     enum: ['currentlyReading', 'wantToRead', 'finishedReading'],
     required: true
+  },
+  progress: {
+    type: Number,
+    default: 0,
   }
 });
 

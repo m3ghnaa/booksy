@@ -1,12 +1,9 @@
-// redux/bookSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   currentlyReading: [],
   wantToRead: [],
-  finishedReading: [],
-  loading: false,
-  error: null,
+  finishedReading: []
 };
 
 const bookSlice = createSlice({
@@ -19,24 +16,58 @@ const bookSlice = createSlice({
       state.wantToRead = wantToRead || [];
       state.finishedReading = finishedReading || [];
     },
-    clearBooks: (state) => {
-      state.currentlyReading = [];
-      state.wantToRead = [];
-      state.finishedReading = [];
-    },
+    
     addToReadingList: (state, action) => {
-        const { book, category } = action.payload;
-        const newBook = {
-          googleBookId: book.id,
-          title: book.volumeInfo.title,
-          authors: book.volumeInfo.authors,
-          thumbnail: book.volumeInfo.imageLinks?.thumbnail,
-          pageCount: book.volumeInfo.pageCount,
-        };
-        state[category].push(newBook);
-      },
-  },
+      const { book, category } = action.payload;
+      state[category].push(book);
+    },
+    
+    updateProgress: (state, action) => {
+      const { bookId, category, progress } = action.payload;
+      
+      const bookIndex = state[category].findIndex(book => 
+        book._id === bookId || book.googleBookId === bookId
+      );
+      
+      if (bookIndex !== -1) {
+        state[category][bookIndex].progress = progress;
+      }
+    },
+    
+    updateBookStatus: (state, action) => {
+      const { bookId, oldCategory, newCategory } = action.payload;
+      
+      if (oldCategory === newCategory) return;
+      
+      const bookIndex = state[oldCategory].findIndex(book => 
+        book._id === bookId || book.googleBookId === bookId
+      );
+      
+      if (bookIndex !== -1) {
+        const book = state[oldCategory][bookIndex];
+        
+        state[oldCategory] = state[oldCategory].filter((_, index) => index !== bookIndex);
+        
+        state[newCategory].push(book);
+      }
+    },
+    
+    removeBook: (state, action) => {
+      const { bookId, category } = action.payload;
+      
+      state[category] = state[category].filter(book => 
+        book._id !== bookId && book.googleBookId !== bookId
+      );
+    }
+  }
 });
 
-export const { setBooks, clearBooks, addToReadingList } = bookSlice.actions;
+export const { 
+  setBooks, 
+  addToReadingList, 
+  updateProgress, 
+  updateBookStatus,
+  removeBook
+} = bookSlice.actions;
+
 export default bookSlice.reducer;

@@ -10,23 +10,21 @@ const SearchBar = ({ onSearchResults }) => {
   };
 
   const fetchBooks = async (e) => {
-    e.preventDefault(); // Prevent form submission default behavior
+    e.preventDefault();
     
-    if (!query.trim()) return; // Don't search if query is empty
+    if (!query.trim()) return;
     
     setLoading(true);
     try {
-      // Clear previous results first
       onSearchResults([]);
       
-      // Add timestamp to prevent caching
       const timestamp = new Date().getTime();
       const response = await axios.get(
         `https://www.googleapis.com/books/v1/volumes`, {
           params: {
             q: query,
             maxResults: 20,
-            _: timestamp // Add cache-busting parameter
+            _: timestamp
           }
         }
       );
@@ -34,7 +32,6 @@ const SearchBar = ({ onSearchResults }) => {
       const books = response.data.items || [];
       console.log(`Search results for "${query}":`, books.length);
       
-      // Log the first book to verify different results
       if (books.length > 0) {
         console.log("First book:", books[0].volumeInfo.title);
       }

@@ -12,7 +12,6 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    // Not required as Google users may not have a password
     required: function() {
       return this.authType === 'local';
     }
@@ -22,7 +21,6 @@ const userSchema = new mongoose.Schema({
   },
   googleId: {
     type: String
-    // Remove the unique constraint entirely from the schema
   },
   authType: {
     type: String,
@@ -31,11 +29,10 @@ const userSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  // This ensures virtual properties are included when converting to JSON
   toJSON: {
     virtuals: true,
     transform: function(doc, ret) {
-      delete ret.password; // Don't include password in JSON
+      delete ret.password;
       return ret;
     }
   }

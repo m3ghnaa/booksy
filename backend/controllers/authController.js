@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// Helper to create token and send via cookie
 const sendTokenResponse = (user, statusCode, res) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: '1d',
@@ -24,9 +23,7 @@ const sendTokenResponse = (user, statusCode, res) => {
   });
 };
 
-// @desc    Register new user
-// @route   POST /api/auth/signup
-// @access  Public
+
 const signupUser = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -44,9 +41,7 @@ const signupUser = async (req, res) => {
   }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
+
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -64,9 +59,6 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Logout user (clear cookie)
-// @route   POST /api/auth/logout
-// @access  Public
 const logoutUser = (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,

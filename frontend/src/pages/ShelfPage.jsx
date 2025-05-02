@@ -1,0 +1,68 @@
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Tab, Tabs } from 'react-bootstrap';
+import BookCard from '../components/BookCard';
+import Navbar from '../components/Navbar';
+import { useDispatch } from 'react-redux';
+import { clearUserProfile } from '../redux/userSlice';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
+const ShelfPage = () => {
+  const [key, setKey] = useState('currentlyReading');
+  const { currentlyReading, wantToRead, finishedReading } = useSelector((state) => state.books);
+  const { profile } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    dispatch(clearUserProfile());
+    localStorage.removeItem('token');
+    navigate('/login');
+    toast.info('You have logged out.');
+  };
+  return (
+    <>
+    <Navbar user={profile} onLogout={handleLogout} />
+    <div className="container mt-4">
+      <h2 className="text-center mb-3">My Shelf</h2>
+      <Tabs id="book-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
+        <Tab eventKey="currentlyReading" title="Currently Reading">
+          <div className="row mt-3">
+            {currentlyReading.length > 0 ? (
+              currentlyReading.map((book, index) => (
+                <BookCard key={book._id || book.googleBookId || index} book={book} category="currentlyReading" />
+              ))
+            ) : (
+              <p className="col-12 text-center">No books in this category.</p>
+            )}
+          </div>
+        </Tab>
+        <Tab eventKey="wantToRead" title="Want to Read">
+          <div className="row mt-3">
+            {wantToRead.length > 0 ? (
+              wantToRead.map((book, index) => (
+                <BookCard key={book._id || book.googleBookId || index} book={book} category="wantToRead" />
+              ))
+            ) : (
+              <p className="col-12 text-center">No books in this category.</p>
+            )}
+          </div>
+        </Tab>
+        <Tab eventKey="finishedReading" title="Finished Reading">
+          <div className="row mt-3">
+            {finishedReading.length > 0 ? (
+              finishedReading.map((book, index) => (
+                <BookCard key={book._id || book.googleBookId || index} book={book} category="finishedReading" />
+              ))
+            ) : (
+              <p className="col-12 text-center">No books in this category.</p>
+            )}
+          </div>
+        </Tab>
+      </Tabs>
+    </div>
+    </>
+  );
+};
+
+export default ShelfPage;

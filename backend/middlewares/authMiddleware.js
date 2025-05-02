@@ -13,7 +13,7 @@ const protect = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log('Decoded Token:', decoded); 
-    req.user = decoded; // now accessible in route handlers
+    req.user = decoded; 
     next();
   } catch (error) {
     console.error('JWT Verification Error:', error.message); 
