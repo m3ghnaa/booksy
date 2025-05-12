@@ -1,22 +1,20 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  profile: null,
-  loading: false,
-  error: null,
+  profile: null
 };
 
 const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUserProfile: (state, action) => {
+    setUserProfile(state, action) {
       state.profile = action.payload;
     },
-    clearUserProfile: (state) => {
+    clearUserProfile(state) {
       state.profile = null;
-    },
-  },
+    }
+  }
 });
 
 export const { setUserProfile, clearUserProfile } = userSlice.actions;

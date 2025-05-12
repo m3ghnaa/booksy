@@ -3,7 +3,8 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   currentlyReading: [],
   wantToRead: [],
-  finishedReading: []
+  finishedReading: [],
+  progressUpdated: false
 };
 
 const bookSlice = createSlice({
@@ -16,48 +17,70 @@ const bookSlice = createSlice({
       state.wantToRead = wantToRead || [];
       state.finishedReading = finishedReading || [];
     },
-    
+
     addToReadingList: (state, action) => {
       const { book, category } = action.payload;
       state[category].push(book);
     },
-    
+
     updateProgress: (state, action) => {
-      const { bookId, category, progress } = action.payload;
-      
+      const { bookId, category, progress, pagesRead, progressType } = action.payload;
+
       const bookIndex = state[category].findIndex(book => 
         book._id === bookId || book.googleBookId === bookId
       );
-      
+
       if (bookIndex !== -1) {
-        state[category][bookIndex].progress = progress;
+        const book = state[category][bookIndex];
+        
+        // Update progress (ensure it's a number)
+        state[category][bookIndex].progress = Number(progress);
+        
+        // Update pagesRead if provided
+        if (typeof pagesRead === 'number') {
+          state[category][bookIndex].pagesRead = pagesRead;
+        } else if (book.pageCount && typeof progress === 'number') {
+          // Calculate pagesRead if not provided (fallback)
+          state[category][bookIndex].pagesRead = Math.round((progress / 100) * book.pageCount);
+        }
+
+        // Update progressType if provided
+        if (progressType) {
+          state[category][bookIndex].progressType = progressType;
+        }
+
+        // Update lastRead to current timestamp
+        state[category][bookIndex].lastRead = new Date().toISOString();
       }
     },
-    
+
     updateBookStatus: (state, action) => {
       const { bookId, oldCategory, newCategory } = action.payload;
-      
+
       if (oldCategory === newCategory) return;
-      
+
       const bookIndex = state[oldCategory].findIndex(book => 
         book._id === bookId || book.googleBookId === bookId
       );
-      
+
       if (bookIndex !== -1) {
         const book = state[oldCategory][bookIndex];
-        
+
         state[oldCategory] = state[oldCategory].filter((_, index) => index !== bookIndex);
-        
         state[newCategory].push(book);
       }
     },
-    
+
     removeBook: (state, action) => {
       const { bookId, category } = action.payload;
-      
+
       state[category] = state[category].filter(book => 
         book._id !== bookId && book.googleBookId !== bookId
       );
+    },
+
+    setProgressUpdated: (state, action) => {
+      state.progressUpdated = action.payload;
     }
   }
 });
@@ -67,7 +90,8 @@ export const {
   addToReadingList, 
   updateProgress, 
   updateBookStatus,
-  removeBook
+  removeBook,
+  setProgressUpdated
 } = bookSlice.actions;
 
 export default bookSlice.reducer;

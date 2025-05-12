@@ -1,94 +1,155 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { Form, Button, Container, Card } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import api from '../utils/axiosConfig';
+import Navbar from '../components/Navbar';
 import {
   loginStart,
   loginSuccess,
-  loginFailure,
+  loginFailure
 } from '../redux/authSlice';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Valid email is required';
+    }
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleEmailLogin = async (e) => {
     e.preventDefault();
-    dispatch(loginStart());
+    if (!validateForm()) {
+      toast.error('Please fix form errors');
+      return;
+    }
 
+    dispatch(loginStart());
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (data.token) {
-        dispatch(loginSuccess({ user: data.user, token: data.token }));
-        localStorage.setItem('token', data.token);
-        navigate('/dashboard');
+      console.log('Login payload:', formData);
+      const response = await api.post('/auth/login', formData);
+      const { user, token } = response.data;
+      console.log('Login response:', { user, token });
+      dispatch(loginSuccess({ user, token }));
+      localStorage.setItem('token', token);
+      toast.success('Logged in successfully');
+      navigate('/dashboard');
+    } catch (error) {
+      const message = error.response?.data?.message || 'Login failed';
+      console.error('Login error:', error.response?.data);
+      dispatch(loginFailure(message));
+      if (message.includes('No password found')) {
+        toast.error(message, {
+          autoClose: 5000,
+          action: {
+            text: 'Sign up again',
+            onClick: () => navigate('/signup')
+          }
+        });
       } else {
-        dispatch(loginFailure(data.message || 'Login failed'));
+        toast.error(message);
       }
-    } catch (err) {
-      dispatch(loginFailure('Server error. Try again.'));
-      console.error('Login error', err);
     }
   };
 
   const handleGoogleLogin = async (response) => {
-    const { credential } = response;
     dispatch(loginStart());
-
     try {
-      const res = await fetch('http://localhost:5000/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: credential }),
-      });
-      const data = await res.json();
-      if (data.token) {
-        dispatch(loginSuccess({ user: data.user, token: data.token }));
-        localStorage.setItem('token', data.token);
-        navigate('/dashboard');
-      } else {
-        dispatch(loginFailure('Google login failed'));
-      }
-    } catch (err) {
-      dispatch(loginFailure('Google login failed'));
-      console.error('Google login error', err);
+      console.log('Google login credential:', response.credential);
+      const res = await api.post('/auth/google', { token: response.credential });
+      const { user, token } = res.data;
+      console.log('Google login response:', { user, token });
+      dispatch(loginSuccess({ user, token }));
+      localStorage.setItem('token', token);
+      toast.success('Logged in with Google');
+      navigate('/dashboard');
+    } catch (error) {
+      const message = error.response?.data?.message || 'Google login failed';
+      console.error('Google login error:', error.response?.data);
+      dispatch(loginFailure(message));
+      toast.error(message);
     }
   };
 
   return (
-    <Container className="mt-5 d-flex justify-content-center">
-      <Card style={{ width: '24rem' }} className="p-4 shadow">
-        <h3 className="text-center mb-3">Login</h3>
-        <Form onSubmit={handleEmailLogin}>
-          <Form.Group className="mb-3">
-            <Form.Label>Email address</Form.Label>
-            <Form.Control type="email" required onChange={(e) => setEmail(e.target.value)} />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Password</Form.Label>
-            <Form.Control type="password" required onChange={(e) => setPassword(e.target.value)} />
-          </Form.Group>
-          <Button type="submit" className="w-100" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </Button>
-        </Form>
-        {error && <div className="text-danger mt-2 text-center">{error}</div>}
-        <hr />
-        <GoogleLogin onSuccess={handleGoogleLogin} onError={() => dispatch(loginFailure('Google login failed'))} />
-        <p className="mt-3 text-center">
-          Don’t have an account? <a href="/signup">Sign up</a>
-        </p>
-      </Card>
-    </Container>
+    <>
+      <Navbar isAuthPage={true} />
+      <div className="container mt-5 flex justify-center">
+        <div className="card p-4 shadow-sm max-w-md w-full">
+          <h3 className="text-center mb-4">Login</h3>
+          <form onSubmit={handleEmailLogin}>
+            <div className="mb-3">
+              <label htmlFor="email" className="form-label">Email address</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                disabled={loading}
+              />
+              {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+            </div>
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                disabled={loading}
+              />
+              {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+            </div>
+            <button
+              type="submit"
+              className="btn btn-primary w-full"
+              disabled={loading}
+            >
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+          {error && <div className="text-red-500 mt-2 text-center">{error}</div>}
+          <hr className="my-4" />
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => {
+                dispatch(loginFailure('Google login failed'));
+                toast.error('Google login failed');
+              }}
+            />
+          </div>
+          <p className="mt-3 text-center">
+            Don’t have an account? <a href="/signup" className="text-blue-500">Sign up</a>
+          </p>
+        </div>
+      </div>
+    </>
   );
 };
 

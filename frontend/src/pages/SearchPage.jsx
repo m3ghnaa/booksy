@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setSearchResults } from '../redux/searchSlice';
 import { addToReadingList, setBooks } from '../redux/bookSlice';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../utils/axiosConfig';
 import SearchBar from '../components/SearchBar';
 import BookResults from '../components/BookResults';
 import Navbar from '../components/Navbar';
@@ -21,9 +21,20 @@ const SearchPage = () => {
   const handleAddBook = async (book, category) => {
     const existing = [...currentlyReading, ...wantToRead, ...finishedReading];
     const alreadyAdded = existing.find(b => b.googleBookId === book.id);
+    
+    // If book exists in a different category, we'll let the backend handle moving it
     if (alreadyAdded) {
-      toast.warning('This book is already in your reading list.');
-      return;
+      const existingCategory = alreadyAdded.category || 
+        (currentlyReading.some(b => b.googleBookId === book.id) ? 'currentlyReading' :
+         wantToRead.some(b => b.googleBookId === book.id) ? 'wantToRead' : 'finishedReading');
+      
+      if (existingCategory === category) {
+        toast.warning(`This book is already in your ${category} list.`);
+        return;
+      } else {
+        // We'll continue and let the backend handle moving the book between categories
+        toast.info(`Moving book from ${existingCategory} to ${category}...`);
+      }
     }
 
     const bookData = {
@@ -39,22 +50,19 @@ const SearchPage = () => {
 
     const token = localStorage.getItem('token');
     try {
-      await axios.post('http://localhost:5000/api/books', {
+      const response = await api.post('/books', {
         category,
         ...bookData
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
-      toast.success('Book added successfully!');
+      // Check if book was added or moved
+      if (response.status === 200) {
+        toast.success(response.data.message || 'Book moved successfully!');
+      } else {
+        toast.success('Book added successfully!');
+      }
 
-      const res = await axios.get('http://localhost:5000/api/books', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.get('/books');
 
       const categorizedBooks = {
         currentlyReading: res.data.currentlyReading || [],

@@ -1,0 +1,36 @@
+{"level":"info","message":"Uploads directory created or already exists:","timestamp":"2025-05-07T12:05:25.783Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-05-07T12:05:25.794Z"}
+{"level":"info","message":"Uploads directory created or already exists:","timestamp":"2025-05-07T12:15:11.276Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-05-07T12:15:11.297Z"}
+{"level":"info","message":"Uploads directory created or already exists:","timestamp":"2025-05-07T12:16:15.843Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-05-07T12:16:15.852Z"}
+{"level":"info","message":"Uploads directory created or already exists:","timestamp":"2025-05-07T12:20:30.179Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-05-07T12:20:30.189Z"}
+{"level":"info","message":"Uploads directory created or already exists:","path":"/Users/meghnachandra/Projects/booksy/backend/public/uploads","timestamp":"2025-05-07T12:21:04.928Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-05-07T12:21:04.938Z"}
+{"level":"info","message":"updateUserSettings called with body:","timestamp":"2025-05-07T12:21:25.846Z"}
+{"file":{"destination":"/Users/meghnachandra/Projects/booksy/backend/public/uploads","encoding":"7bit","fieldname":"avatar","filename":"680f05e39a1af3050eb947b9-1746620485853-144437495.png","mimetype":"image/png","originalname":"undraw_dev-focus_dd7i-Photoroom.png","path":"/Users/meghnachandra/Projects/booksy/backend/public/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","size":79399},"level":"info","message":"Request file:","timestamp":"2025-05-07T12:21:25.855Z"}
+{"level":"info","message":"Deleting old avatar:","path":"/Users/meghnachandra/Projects/booksy/backend/public/uploads/680f05e39a1af3050eb947b9-1746620196843-719276905.jpg","timestamp":"2025-05-07T12:21:25.911Z"}
+{"level":"info","message":"Old avatar deleted","timestamp":"2025-05-07T12:21:25.911Z"}
+{"avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","level":"info","message":"New avatar URL:","timestamp":"2025-05-07T12:21:25.911Z"}
+{"level":"info","message":"Checking file at:","path":"/Users/meghnachandra/Projects/booksy/backend/public/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","timestamp":"2025-05-07T12:21:25.912Z"}
+{"level":"info","message":"Updating user with data:","timestamp":"2025-05-07T12:21:25.912Z","updateData":{"avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","email":"meghna.chandrababu@gmail.com","name":"Meghna Chandra"}}
+{"_id":"680f05e39a1af3050eb947b9","avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","email":"meghna.chandrababu@gmail.com","level":"info","message":"Updated user:","name":"Meghna Chandra","timestamp":"2025-05-07T12:21:25.951Z"}
+{"level":"info","message":"Uploads directory created or already exists:","path":"/Users/meghnachandra/Projects/booksy/backend/public/uploads","timestamp":"2025-05-07T12:24:41.408Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-05-07T12:24:41.455Z"}
+{"level":"info","message":"updateUserSettings called with body:","timestamp":"2025-05-07T12:25:09.380Z"}
+{"level":"info","message":"Request file:","timestamp":"2025-05-07T12:25:09.383Z"}
+{"_id":"680f05e39a1af3050eb947b9","avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","email":"meghna.chandrababu@gmail.com","level":"info","message":"User before update:","name":"Meghna Chandra","timestamp":"2025-05-07T12:25:09.458Z"}
+{"level":"info","message":"Updating user with data:","timestamp":"2025-05-07T12:25:09.458Z","updateData":{"email":"meghna.chandrababu@gmail.com","name":"Meghna Chandra"}}
+{"_id":"680f05e39a1af3050eb947b9","avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","email":"meghna.chandrababu@gmail.com","level":"info","message":"Verified user after update:","name":"Meghna Chandra","timestamp":"2025-05-07T12:25:09.508Z"}
+{"_id":"680f05e39a1af3050eb947b9","avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","email":"meghna.chandrababu@gmail.com","level":"info","message":"Updated user:","name":"Meghna Chandra","timestamp":"2025-05-07T12:25:09.509Z"}
+{"level":"info","message":"updateUserSettings called with body:","timestamp":"2025-05-07T12:25:22.929Z"}
+{"file":{"destination":"/Users/meghnachandra/Projects/booksy/backend/public/uploads","encoding":"7bit","fieldname":"avatar","filename":"680f05e39a1af3050eb947b9-1746620722933-761792815.jpg","mimetype":"image/jpeg","originalname":"demon-slayer-kimetsu-no-yaiba-646f30ac5433e.jpg","path":"/Users/meghnachandra/Projects/booksy/backend/public/uploads/680f05e39a1af3050eb947b9-1746620722933-761792815.jpg","size":45498},"level":"info","message":"Request file:","timestamp":"2025-05-07T12:25:22.936Z"}
+{"_id":"680f05e39a1af3050eb947b9","avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","email":"meghna.chandrababu@gmail.com","level":"info","message":"User before update:","name":"Meghna Chandra","timestamp":"2025-05-07T12:25:23.000Z"}
+{"level":"info","message":"Deleting old avatar:","path":"/Users/meghnachandra/Projects/booksy/backend/public/uploads/680f05e39a1af3050eb947b9-1746620485853-144437495.png","timestamp":"2025-05-07T12:25:23.000Z"}
+{"level":"info","message":"Old avatar deleted","timestamp":"2025-05-07T12:25:23.002Z"}
+{"avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620722933-761792815.jpg","level":"info","message":"New avatar URL:","timestamp":"2025-05-07T12:25:23.002Z"}
+{"level":"info","message":"Checking file at:","path":"/Users/meghnachandra/Projects/booksy/backend/public/uploads/680f05e39a1af3050eb947b9-1746620722933-761792815.jpg","timestamp":"2025-05-07T12:25:23.002Z"}
+{"level":"info","message":"Updating user with data:","timestamp":"2025-05-07T12:25:23.003Z","updateData":{"avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620722933-761792815.jpg","email":"meghna.chandrababu@gmail.com","name":"Meghna Chandra"}}
+{"_id":"680f05e39a1af3050eb947b9","avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620722933-761792815.jpg","email":"meghna.chandrababu@gmail.com","level":"info","message":"Verified user after update:","name":"Meghna Chandra","timestamp":"2025-05-07T12:25:23.052Z"}
+{"_id":"680f05e39a1af3050eb947b9","avatar":"http://localhost:5000/uploads/680f05e39a1af3050eb947b9-1746620722933-761792815.jpg","email":"meghna.chandrababu@gmail.com","level":"info","message":"Updated user:","name":"Meghna Chandra","timestamp":"2025-05-07T12:25:23.053Z"}

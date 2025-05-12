@@ -10,13 +10,30 @@ const BookSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: ['currentlyReading', 'wantToRead', 'finishedReading'],
-    required: true
+    required: true,
   },
-  progress: {
+  pagesRead: {
     type: Number,
     default: 0,
-  }
+  },
+  progressType: {
+    type: String,
+    enum: ['percentage', 'pages'],
+    default: 'percentage',
+  },
+  lastRead: {
+    type: Date,
+  },
 });
+
+BookSchema.virtual('progress').get(function () {
+  if (this.pageCount && this.pageCount > 0) {
+    return (this.pagesRead / this.pageCount) * 100;
+  }
+  return 0;
+});
+
+BookSchema.set('toJSON', { virtuals: true });
 
 const Book = mongoose.model('Book', BookSchema);
 module.exports = Book;
