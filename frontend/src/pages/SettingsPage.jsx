@@ -23,6 +23,7 @@ const SettingsPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && !user && !isLoadingUser) {
@@ -113,6 +114,42 @@ const SettingsPage = () => {
         ...prev,
         avatar: ''
       }));
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please log in to remove avatar');
+      return;
+    }
+
+    setIsRemovingAvatar(true);
+    try {
+      // Send DELETE request to remove the avatar
+      const response = await api.delete('/users/avatar');
+
+      // Update Redux store with the updated user (avatar: null)
+      const updatedUser = {
+        ...user,
+        avatar: null
+      };
+      dispatch(updateUser(updatedUser));
+      dispatch(setUserProfile(updatedUser));
+
+      // Clear formData.avatar and preview
+      setFormData((prev) => ({
+        ...prev,
+        avatar: null
+      }));
+      setPreview(null);
+      setHasError(false);
+
+      toast.success('Avatar removed successfully');
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to remove avatar';
+      toast.error(errorMessage);
+    } finally {
+      setIsRemovingAvatar(false);
     }
   };
 
@@ -260,6 +297,19 @@ const SettingsPage = () => {
                 size={100}
                 style={{ display: 'block', margin: 'auto' }}
               />
+            </div>
+          )}
+
+          {preview && (
+            <div className="mb-3">
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleRemoveAvatar}
+                disabled={isRemovingAvatar || isSubmitting}
+              >
+                {isRemovingAvatar ? 'Removing...' : 'Remove Avatar'}
+              </button>
             </div>
           )}
 

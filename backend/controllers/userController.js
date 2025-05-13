@@ -240,8 +240,61 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+/**
+ * Delete user avatar
+ */
+const deleteAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete the avatar file from the uploads folder
+    if (user.avatar && user.avatar.startsWith(`${process.env.SERVER_URL}/uploads/`)) {
+      const filename = user.avatar.split('/').pop().split('?')[0];
+      const filePath = path.join(__dirname, '../public/uploads', filename);
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`Deleted avatar file: ${filePath}`);
+        } else {
+          console.log(`Avatar file not found: ${filePath}`);
+        }
+      } catch (err) {
+        console.error('Error deleting avatar file:', err);
+        // Continue even if file deletion fails (file might already be deleted)
+      }
+    }
+
+    // Update user avatar to null
+    user.avatar = null;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Avatar removed successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar || ''
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting avatar:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting avatar',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   getUserStats,
   updateUserSettings,
-  getCurrentUser
+  getCurrentUser,
+  deleteAvatar
 };

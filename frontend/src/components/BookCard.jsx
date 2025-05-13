@@ -367,7 +367,7 @@ const BookCard = ({ book, onAddBook, category }) => {
                     </button>
                   </>
                 ) : (
-                  <span className="text-success w-100 text-center">Already in your reading list</span>
+                  <span className="text-success w-100 text-center">Book added to your shelf!</span>
                 )}
               </>
             ) : (
