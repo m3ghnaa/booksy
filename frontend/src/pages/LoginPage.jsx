@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 import api from '../utils/axiosConfig';
 import Navbar from '../components/Navbar';
 import {
@@ -77,7 +78,15 @@ const LoginPage = () => {
     dispatch(loginStart());
     try {
       console.log('Google login credential:', response.credential);
-      const res = await api.post('/auth/google', { token: response.credential });
+      // Get the backend URL from environment variable or use the production URL as fallback
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
+      console.log('Using backend URL for Google login:', backendUrl);
+      
+      // Use axios directly with the full URL to ensure we're not using localhost
+      const res = await axios.post(`${backendUrl}/api/auth/google`, { token: response.credential }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
       const { user, token } = res.data;
       console.log('Google login response:', { user, token });
       dispatch(loginSuccess({ user, token }));
@@ -86,7 +95,7 @@ const LoginPage = () => {
       navigate('/dashboard');
     } catch (error) {
       const message = error.response?.data?.message || 'Google login failed';
-      console.error('Google login error:', error.response?.data);
+      console.error('Google login error:', error);
       dispatch(loginFailure(message));
       toast.error(message);
     }

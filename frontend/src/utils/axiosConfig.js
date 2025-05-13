@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// Get the backend URL from environment variable or use the production URL as fallback
+const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
+console.log('Using backend URL:', backendUrl);
+
 const api = axios.create({
-  baseURL: `${process.env.REACT_APP_BACKEND_URL}/api`,
+  baseURL: `${backendUrl}/api`,
   headers: { 'Content-Type': 'application/json' }
 });
 
