@@ -17,6 +17,7 @@ import { useDispatch } from 'react-redux';
 import { loginSuccess, logout } from './redux/authSlice';
 import { setUserProfile, clearUserProfile } from './redux/userSlice';
 import api from './utils/axiosConfig';
+import LandingPage from './pages/LandingPage';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -66,7 +67,7 @@ const App = () => {
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <Router>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/search" element={
             <ProtectedRoute>
               <SearchPage />
