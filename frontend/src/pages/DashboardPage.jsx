@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/Navbar';
 import api from '../utils/axiosConfig';
-import { FaBook, FaFileAlt, FaFire, FaQuoteLeft } from 'react-icons/fa';
+import { FaBook, FaFileAlt, FaFire, FaQuoteLeft, FaUserCircle } from 'react-icons/fa';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -220,9 +220,14 @@ const Dashboard = () => {
     },
   };
 
+
+  const joinDate = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : 'May 2025'; 
+
   return (
     <>
-       <style>
+      <style>
         {`
           @media (max-width: 576px) {
             .responsive-card {
@@ -240,6 +245,16 @@ const Dashboard = () => {
             }
             .chart-container {
               height: 250px !important;
+            }
+            .profile-avatar {
+              width: 60px !important;
+              height: 60px !important;
+            }
+            .profile-name {
+              font-size: 1.2rem !important;
+            }
+            .profile-info {
+              font-size: 0.85rem !important;
             }
           }
           @media (min-width: 576px) and (max-width: 768px) {
@@ -259,10 +274,30 @@ const Dashboard = () => {
             .chart-container {
               height: 300px !important;
             }
+            .profile-avatar {
+              width: 80px !important;
+              height: 80px !important;
+            }
+            .profile-name {
+              font-size: 1.5rem !important;
+            }
+            .profile-info {
+              font-size: 0.9rem !important;
+            }
           }
           @media (min-width: 769px) {
             .chart-container {
               height: 350px !important;
+            }
+            .profile-avatar {
+              width: 100px !important;
+              height: 100px !important;
+            }
+            .profile-name {
+              font-size: 1.8rem !important;
+            }
+            .profile-info {
+              font-size: 1rem !important;
             }
           }
         `}
@@ -280,6 +315,38 @@ const Dashboard = () => {
             </div>
           ) : (
             <>
+              {/* Profile Info Section */}
+              <div className="row mb-4">
+                <div className="col-12">
+                  <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
+                    <div className="me-3">
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt="User Avatar"
+                          className="rounded-circle profile-avatar"
+                          style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                          onError={(e) => (e.target.src = 'https://via.placeholder.com/100?text=Avatar')}
+                        />
+                      ) : (
+                        <FaUserCircle className="text-muted profile-avatar" style={{ width: '100px', height: '100px' }} />
+                      )}
+                    </div>
+                    <div className="flex-grow-1">
+                      <h4 className="profile-name mb-1">{user?.name || 'User'}</h4>
+                      <p className="text-muted profile-info mb-1">Member since {joinDate}</p>
+                      <p className="text-muted profile-info mb-1">
+                        Favorite Genre: {user?.favoriteGenre || 'Not set'}
+                      </p>
+                      <p className="text-muted profile-info mb-0">
+                        Reading Goal: {user?.readingGoal || 'Not set'} books this year
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
               <div className="row mt-1 mt-md-5">
                 <div className="col-12 col-sm-6 text-center mb-3 mb-sm-0">
                   <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ height: '120px' }}>
@@ -306,6 +373,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+
               <div className="row mt-3 mt-md-5 mb-4 mb-md-4">
                 <div className="col-12">
                   <div className="card p-2 p-md-3 shadow-sm chart-container" style={{ height: '350px' }}>
@@ -318,6 +386,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+
               <div className="row mt-1 mt-md-5">
                 <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                   <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ minHeight: '100px' }}>
