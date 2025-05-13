@@ -100,7 +100,7 @@ const useAuth = () => {
     clearTokens();
     
     // Call logout API
-    fetch('http://localhost:5000/api/auth/logout', {
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/logout`, {
       method: 'GET',
       credentials: 'include', // For cookies
     }).catch(() => {});

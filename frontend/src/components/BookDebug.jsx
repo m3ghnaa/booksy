@@ -21,7 +21,7 @@ const BookDebug = () => {
         return;
       }
 
-      const res = await axios.get('http://localhost:5000/api/books', {
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/books`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
