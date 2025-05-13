@@ -48,10 +48,10 @@ const LoginPage = () => {
 
     dispatch(loginStart());
     try {
-      console.log('Login payload:', formData);
+
       const response = await api.post('/auth/login', formData);
       const { user, token } = response.data;
-      console.log('Login response:', { user, token });
+
       dispatch(loginSuccess({ user, token }));
       localStorage.setItem('token', token);
       toast.success('Logged in successfully');
@@ -77,10 +77,10 @@ const LoginPage = () => {
   const handleGoogleLogin = async (response) => {
     dispatch(loginStart());
     try {
-      console.log('Google login credential:', response.credential);
+
       // Get the backend URL from environment variable or use the production URL as fallback
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
-      console.log('Using backend URL for Google login:', backendUrl);
+
       
       // Use axios directly with the full URL to ensure we're not using localhost
       const res = await axios.post(`${backendUrl}/api/auth/google`, { token: response.credential }, {
@@ -88,7 +88,7 @@ const LoginPage = () => {
       });
       
       const { user, token } = res.data;
-      console.log('Google login response:', { user, token });
+
       dispatch(loginSuccess({ user, token }));
       localStorage.setItem('token', token);
       toast.success('Logged in with Google');

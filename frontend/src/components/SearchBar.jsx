@@ -30,11 +30,7 @@ const SearchBar = ({ onSearchResults }) => {
       );
       
       const books = response.data.items || [];
-      console.log(`Search results for "${query}":`, books.length);
-      
-      if (books.length > 0) {
-        console.log("First book:", books[0].volumeInfo.title);
-      }
+
       
       onSearchResults(books);
     } catch (error) {

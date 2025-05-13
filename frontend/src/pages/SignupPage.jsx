@@ -66,7 +66,7 @@ const SignupPage = () => {
         email: formData.email,
         password: formData.password
       });
-      console.log('Signup response:', response.data);
+
 
       dispatch(signupSuccess({
         user: response.data.user,
@@ -78,11 +78,7 @@ const SignupPage = () => {
       navigate('/dashboard');
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Signup failed';
-      console.error('Signup error:', {
-        message: errorMessage,
-        status: error.response?.status,
-        data: error.response?.data
-      });
+      // Error handled by toast
       dispatch(signupFailure(errorMessage));
       toast.error(errorMessage);
     }
@@ -94,7 +90,7 @@ const SignupPage = () => {
       const response = await api.post('/auth/google', {
         token: credentialResponse.credential
       });
-      console.log('Google signup response:', response.data);
+
 
       dispatch(signupSuccess({
         user: response.data.user,
