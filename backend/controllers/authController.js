@@ -197,10 +197,10 @@ const googleCallback = async (req, res) => {
     const user = req.user;
     const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
     console.log('Google callback user:', { _id: user._id, name: user.name, email: user.email, avatar: user.avatar });
-    res.redirect(`http://localhost:3000/dashboard?token=${jwtToken}`);
+    res.redirect(`https://booksy-shelf.netlify.app/dashboard?token=${jwtToken}`);
   } catch (error) {
     console.error('Google callback error:', error);
-    res.redirect('http://localhost:3000/login');
+    res.redirect('https://booksy-shelf.netlify.app/login');
   }
 };
 
