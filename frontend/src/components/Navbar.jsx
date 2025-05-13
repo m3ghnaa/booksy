@@ -7,7 +7,14 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
 
   useEffect(() => {
     if (user?.avatar) {
-      setAvatarSrc(`${user.avatar}?t=${new Date().getTime()}`);
+      // Check if the avatar URL is already a full URL or a relative path
+      if (user.avatar.startsWith('http')) {
+        setAvatarSrc(`${user.avatar}?t=${new Date().getTime()}`);
+      } else {
+        // Use the environment variable or fallback to the production URL
+        const serverUrl = process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com';
+        setAvatarSrc(`${serverUrl}${user.avatar.startsWith('/') ? '' : '/'}${user.avatar}?t=${new Date().getTime()}`);
+      }
     } else {
       setAvatarSrc(null);
     }
