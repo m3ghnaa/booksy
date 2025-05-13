@@ -80,9 +80,9 @@ const SearchPage = () => {
   return (
     <>
       <Navbar user={profile} />
-      <div className="container mt-4">
+      <div className="container mt-5 pt-5">
         <div className="card">
-          <div className="card-header bg-primary text-white">
+          <div className="card-header bg-secondary text-white">
             <h5 className="mb-0">Search Books</h5>
           </div>
           <div className="card-body">

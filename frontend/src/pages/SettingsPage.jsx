@@ -193,7 +193,7 @@ const SettingsPage = () => {
   return (
     <>
       <Navbar user={user} onLogout={handleLogout} />
-      <div className="container mt-5">
+      <div className="container mt-5 pt-5">
         <h2 className="mb-4">Settings</h2>
         <form onSubmit={handleSubmit} className="card p-4 shadow-sm" style={{ maxWidth: '500px' }}>
           <div className="mb-3">

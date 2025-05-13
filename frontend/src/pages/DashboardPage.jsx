@@ -48,7 +48,6 @@ const getDailyQuote = () => {
     return JSON.parse(storedQuote);
   }
 
-  // Deterministic random index based on date
   const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const randomIndex = seed % bookQuotes.length;
   const selectedQuote = bookQuotes[randomIndex];
@@ -118,7 +117,6 @@ const Dashboard = () => {
   }, [dispatch, isAuthenticated, books.progressUpdated]);
 
   useEffect(() => {
-    // Update quote daily
     const today = new Date().toDateString();
     if (localStorage.getItem('quoteDate') !== today) {
       setDailyQuote(getDailyQuote());
@@ -143,7 +141,6 @@ const Dashboard = () => {
     toast.info('Chart refreshed');
   };
 
-  // Chart data and options
   const chartData = {
     labels: readingActivity.map((entry) => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
     datasets: [
@@ -161,13 +158,26 @@ const Dashboard = () => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        bottom: 10,
+      },
+    },
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          font: {
+            size: window.innerWidth < 576 ? 10 : 12,
+          },
+        },
       },
       title: {
         display: true,
         text: 'Daily Reading Activity (Last 30 Days)',
+        font: {
+          size: window.innerWidth < 576 ? 14 : 16,
+        },
       },
       tooltip: {
         callbacks: {
@@ -184,12 +194,27 @@ const Dashboard = () => {
         title: {
           display: true,
           text: 'Pages Read',
+          font: {
+            size: window.innerWidth < 576 ? 10 : 12,
+          },
+        },
+        ticks: {
+          font: {
+            size: window.innerWidth < 576 ? 8 : 10,
+          },
         },
       },
       x: {
         title: {
           display: true,
-          text: 'Date',
+          font: {
+            size: window.innerWidth < 576 ? 10 : 12,
+          },
+        },
+        ticks: {
+          font: {
+            size: window.innerWidth < 576 ? 8 : 10,
+          },
         },
       },
     },
@@ -197,11 +222,56 @@ const Dashboard = () => {
 
   return (
     <>
+       <style>
+        {`
+          @media (max-width: 576px) {
+            .responsive-card {
+              height: 100px !important;
+              min-height: 100px !important;
+            }
+            .responsive-card h6 {
+              font-size: 0.8rem !important;
+            }
+            .responsive-card p {
+              font-size: 0.85rem !important;
+            }
+            .responsive-card h5 {
+              font-size: 1rem !important;
+            }
+            .chart-container {
+              height: 250px !important;
+            }
+          }
+          @media (min-width: 576px) and (max-width: 768px) {
+            .responsive-card {
+              height: 110px !important;
+              min-height: 110px !important;
+            }
+            .responsive-card h6 {
+              font-size: 0.85rem !important;
+            }
+            .responsive-card p {
+              font-size: 0.9rem !important;
+            }
+            .responsive-card h5 {
+              font-size: 1.05rem !important;
+            }
+            .chart-container {
+              height: 300px !important;
+            }
+          }
+          @media (min-width: 769px) {
+            .chart-container {
+              height: 350px !important;
+            }
+          }
+        `}
+      </style>
       <Navbar user={user} onLogout={handleLogout} />
-      <div className="container d-flex flex-column min-vh-100">
+      <div className="container d-flex flex-column min-vh-100 mt-5 pt-5">
         <div className="row align-items-center">
           {loading ? (
-            <div className="col-12 text-center">
+            <div className="col-12 text-center my-5">
               <div className="d-flex justify-content-center">
                 <div className="spinner-border" role="status">
                   <span className="visually-hidden">Loading...</span>
@@ -210,24 +280,24 @@ const Dashboard = () => {
             </div>
           ) : (
             <>
-              <div className="row mt-5">
-                <div className="col-12 col-md-6 text-center">
-                  <div className="border border-muted p-3 position-relative shadow-sm" style={{ height: '120px' }}>
+              <div className="row mt-1 mt-md-5">
+                <div className="col-12 col-sm-6 text-center mb-3 mb-sm-0">
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ height: '120px' }}>
                     <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-20px', zIndex: 10 }}>
                       <span style={{ fontSize: '2rem' }}>🔥</span>
                     </div>
-                    <h6 className="text-muted mb-1 text-center" style={{ fontSize: '0.9rem' }}>Current Streak</h6>
-                    <h5 className="text-muted text-center pt-3" style={{ fontSize: '1.1rem' }}>
+                    <h6 className="text-muted mb-1 text-center pt-3" style={{ fontSize: '0.9rem' }}>Current Streak</h6>
+                    <h5 className="text-muted text-center pt-1" style={{ fontSize: '1.1rem' }}>
                       {currentStreak} {currentStreak === 1 ? 'day' : 'days'}
                     </h5>
                   </div>
                 </div>
-                <div className="col-12 col-md-6 text-center">
-                  <div className="border border-muted p-3 position-relative shadow-sm" style={{ height: '120px' }}>
+                <div className="col-12 col-sm-6 text-center">
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ height: '120px' }}>
                     <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-18px', zIndex: 10 }}>
                       <FaQuoteLeft className="text-muted" style={{ fontSize: '1.6rem' }} />
                     </div>
-                    <p className="text-muted mb-1 text-center" style={{ fontSize: '1rem', fontStyle: 'italic' }}>
+                    <p className="text-muted mb-1 text-center pt-3" style={{ fontSize: '1rem', fontStyle: 'italic' }}>
                       "{dailyQuote.text}"
                     </p>
                     <p className="text-muted text-center" style={{ fontSize: '0.9rem' }}>
@@ -236,9 +306,9 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="row mt-5 mb-4">
+              <div className="row mt-3 mt-md-5 mb-4 mb-md-4">
                 <div className="col-12">
-                  <div className="card p-3 shadow-sm" style={{ height: '300px' }}>
+                  <div className="card p-2 p-md-3 shadow-sm chart-container" style={{ height: '350px' }}>
                     <div className="d-flex justify-content-end mb-2">
                       <button className="btn btn-outline-primary btn-sm" onClick={handleRefresh}>
                         Refresh Chart
@@ -248,32 +318,32 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="row mt-5">
-                <div className="col-12 col-md-4 text-center">
-                  <div className="border border-muted p-3 position-relative shadow-sm" style={{ minHeight: '100px' }}>
+              <div className="row mt-1 mt-md-5">
+                <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ minHeight: '100px' }}>
                     <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-18px', zIndex: 10 }}>
                       <FaBook className="text-primary" style={{ fontSize: '1.6rem' }} />
                     </div>
-                    <h6 className="text-muted mb-1 text-center" style={{ fontSize: '0.9rem' }}>Total Books Read</h6>
-                    <h5 className="text-muted text-center pt-2" style={{ fontSize: '1.1rem' }}>{totalBooksRead}</h5>
+                    <h6 className="text-muted mb-1 text-center pt-3" style={{ fontSize: '0.9rem' }}>Total Books Read</h6>
+                    <h5 className="text-muted text-center pt-1" style={{ fontSize: '1.1rem' }}>{totalBooksRead}</h5>
                   </div>
                 </div>
-                <div className="col-12 col-md-4 text-center">
-                  <div className="border border-muted p-3 position-relative shadow-sm" style={{ minHeight: '100px' }}>
+                <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ minHeight: '100px' }}>
                     <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-18px', zIndex: 10 }}>
                       <FaFileAlt className="text-success" style={{ fontSize: '1.6rem' }} />
                     </div>
-                    <h6 className="text-muted mb-1 text-center" style={{ fontSize: '0.9rem' }}>Total Pages Read</h6>
-                    <h5 className="text-muted text-center pt-2" style={{ fontSize: '1.1rem' }}>{totalPagesRead}</h5>
+                    <h6 className="text-muted mb-1 text-center pt-3" style={{ fontSize: '0.9rem' }}>Total Pages Read</h6>
+                    <h5 className="text-muted text-center pt-1" style={{ fontSize: '1.1rem' }}>{totalPagesRead}</h5>
                   </div>
                 </div>
-                <div className="col-12 col-md-4 text-center">
-                  <div className="border border-muted p-3 position-relative shadow-sm" style={{ minHeight: '100px' }}>
+                <div className="col-12 col-sm-4 text-center">
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ minHeight: '100px' }}>
                     <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-18px', zIndex: 10 }}>
                       <FaFire className="text-danger" style={{ fontSize: '1.6rem' }} />
                     </div>
-                    <h6 className="text-muted mb-1 text-center" style={{ fontSize: '0.9rem' }}>Longest Streak</h6>
-                    <h5 className="text-muted text-center pt-2" style={{ fontSize: '1.1rem' }}>
+                    <h6 className="text-muted mb-1 text-center pt-3" style={{ fontSize: '0.9rem' }}>Longest Streak</h6>
+                    <h5 className="text-muted text-center pt-1" style={{ fontSize: '1.1rem' }}>
                       {maxReadingStreak} {maxReadingStreak === 1 ? 'day' : 'days'}
                     </h5>
                   </div>

@@ -50,8 +50,8 @@ const ShelfPage = () => {
   return (
     <>
       <Navbar user={profile} onLogout={handleLogout} />
-      <div className="container mt-4">
-        <h2 className="text-center mb-3">My Shelf</h2>
+      <div className="container mt-5 pt-5">
+        <h4 className="text-center mb-5">{profile?.name ? `${profile.name}'s Shelf` : 'My Shelf'}</h4>
         <Tabs id="book-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
           <Tab eventKey="currentlyReading" title="Currently Reading">
             <div className="row mt-3">
