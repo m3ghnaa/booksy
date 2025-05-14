@@ -30,10 +30,7 @@ app.use(cors({
   origin: function(origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if(!origin) return callback(null, true);
-    
-    // Define allowed origins
     const allowedOrigins = [
-      'http://localhost:3000',
       'https://booksy-shelf.netlify.app'
     ];
     
