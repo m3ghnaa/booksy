@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { clearSearchResults } from '../redux/searchSlice';
-import { setBooks, setProgressUpdated } from '../redux/bookSlice';
+import { setBooks, setProgressUpdated, setUserStats, setReadingActivity } from '../redux/bookSlice';
 import { logout } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
