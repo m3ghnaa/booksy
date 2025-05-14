@@ -105,8 +105,8 @@ const bookSlice = createSlice({
     
     setReadingActivity: (state, action) => {
       state.readingActivity = {
-        data: action.payload,
-        lastFetched: Date.now()
+        data: action.payload.data || [],
+        lastFetched: action.payload.lastFetched || Date.now()
       };
     }
   }

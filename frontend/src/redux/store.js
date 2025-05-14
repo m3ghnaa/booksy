@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import { combineReducers } from 'redux';
+import thunk from 'redux-thunk';
 
 import authReducer from './authSlice';
 import userReducer from './userSlice';
@@ -41,13 +42,13 @@ const rootReducer = combineReducers({
   search: persistReducer(searchPersistConfig, searchReducer)
 });
 
-// Create the store
+// Create the store with thunk middleware
 const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false
-    })
+    }).concat(thunk)
 });
 
 // Create the persistor
