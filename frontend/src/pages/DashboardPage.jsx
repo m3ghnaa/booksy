@@ -67,6 +67,7 @@ const Dashboard = () => {
   const [totalBooksRead, setTotalBooksRead] = useState(0);
   const [readingActivity, setReadingActivity] = useState([]);
   const [dailyQuote, setDailyQuote] = useState(getDailyQuote());
+  const [hasAvatarError, setHasAvatarError] = useState(false);
 
   const { isAuthenticated, user, books } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
@@ -367,15 +368,15 @@ const Dashboard = () => {
                 <div className="col-12">
                   <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
                     <div className="me-3">
-                      {user?.avatar ? (
+                      {user?.avatar && !user.avatar.includes('localhost') && !hasAvatarError ? (
                         <img
-                          src={user.avatar && user.avatar.startsWith('http:') && user.avatar.includes('onrender.com')
+                          src={user.avatar && user.avatar.startsWith('http:') 
                             ? user.avatar.replace('http:', 'https:')
                             : user.avatar}
                           alt="User Avatar"
                           className="rounded-circle profile-avatar"
                           style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-                          onError={(e) => (e.target.src = 'https://via.placeholder.com/100?text=Avatar')}
+                          onError={() => setHasAvatarError(true)}
                         />
                       ) : (
                         <FaUserCircle className="text-muted profile-avatar" style={{ width: '100px', height: '100px' }} />

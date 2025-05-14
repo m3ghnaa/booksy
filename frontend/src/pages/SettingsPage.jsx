@@ -56,7 +56,23 @@ const SettingsPage = () => {
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal ? user.readingGoal.toString() : ''
       });
-      setPreview(user.avatar ? `${user.avatar}?t=${Date.now()}` : null);
+      
+      // Handle avatar URL properly
+      if (user.avatar) {
+        // Skip localhost URLs
+        if (user.avatar.includes('localhost')) {
+          setPreview(null);
+        } else {
+          // Ensure HTTPS for production URLs
+          const avatarUrl = user.avatar.startsWith('http:') ? 
+            user.avatar.replace('http:', 'https:') : 
+            user.avatar;
+          setPreview(`${avatarUrl}?t=${Date.now()}`);
+        }
+      } else {
+        setPreview(null);
+      }
+      
       setHasError(false);
     }
   }, [user]);
@@ -323,7 +339,7 @@ const SettingsPage = () => {
             {errors.avatar && <div className="invalid-feedback">{errors.avatar}</div>}
           </div>
 
-          {preview ? (
+          {preview && !preview.includes('localhost') ? (
             <div className="mb-3">
               <label className="form-label">Avatar Preview</label>
               <img
@@ -331,7 +347,7 @@ const SettingsPage = () => {
                 alt="Avatar Preview"
                 className="img-fluid rounded"
                 style={{ maxWidth: '100px', maxHeight: '100px' }}
-                onError={(e) => {
+                onError={() => {
                   setHasError(true);
                   setPreview(null);
                 }}
