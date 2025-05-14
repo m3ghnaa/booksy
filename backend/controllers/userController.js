@@ -6,7 +6,16 @@ const path = require('path');
 const fs = require('fs');
 
 // Base URL for serving uploads (adjust based on your server URL)
-const BASE_URL = process.env.SERVER_URL || 'http://localhost:5000';
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5000';
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../public/uploads');
+try {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`Uploads directory ensured at: ${uploadsDir}`);
+} catch (err) {
+  console.error(`Error ensuring uploads directory: ${err.message}`);
+}
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
@@ -14,38 +23,63 @@ const storage = multer.diskStorage({
     const uploadPath = path.join(__dirname, '../public/uploads');
     console.log('Multer destination:', uploadPath);
     try {
+      // Double-check directory exists at upload time
       fs.mkdirSync(uploadPath, { recursive: true });
-      console.log('Uploads directory created or exists');
+      // Check if directory is writable
+      fs.accessSync(uploadPath, fs.constants.W_OK);
+      console.log('Uploads directory exists and is writable');
       cb(null, uploadPath);
     } catch (err) {
-      console.error('Error creating uploads directory:', err);
+      console.error('Error with uploads directory:', err);
       cb(err);
     }
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    const filename = `${req.user.id}-${uniqueSuffix}${ext}`;
-    console.log('Multer filename:', filename, 'Original:', file.originalname);
-    cb(null, filename);
+    try {
+      if (!req.user || !req.user.id) {
+        console.error('User not authenticated for file upload');
+        return cb(new Error('User not authenticated'));
+      }
+      
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname || '').toLowerCase() || '.jpg';
+      const filename = `${req.user.id}-${uniqueSuffix}${ext}`;
+      console.log('Multer filename:', filename, 'Original:', file.originalname);
+      cb(null, filename);
+    } catch (err) {
+      console.error('Error generating filename:', err);
+      cb(err);
+    }
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-  console.log('File mimetype:', file.mimetype);
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only PNG, JPG, and JPEG files are allowed'), false);
+  try {
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    console.log('File mimetype:', file.mimetype);
+    
+    // Check if mimetype exists and is allowed
+    if (file.mimetype && allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      console.error('Invalid file type:', file.mimetype);
+      cb(new Error('Only PNG, JPG, and JPEG files are allowed'), false);
+    }
+  } catch (err) {
+    console.error('Error in file filter:', err);
+    cb(err);
   }
 };
 
-const upload = multer({
+// Create multer upload instance with error handling
+const uploadMiddleware = multer({
   storage,
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 }).single('avatar');
+
+// Use multer directly since we need the callback pattern in the controller
+const upload = uploadMiddleware;
 
 // Controller for getting user stats
 const getUserStats = async (req, res) => {
@@ -130,6 +164,7 @@ const getUserStats = async (req, res) => {
 const updateUserSettings = async (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
+      console.error('Multer upload error:', err);
       return res.status(400).json({ message: err.message });
     }
 
@@ -169,18 +204,52 @@ const updateUserSettings = async (req, res) => {
 
       let avatarFilename = null;
       if (req.file) {
-        const user = await User.findById(userId);
-        if (user.avatar && user.avatar.startsWith(`${process.env.SERVER_URL}/uploads/`)) {
-          const oldAvatarPath = path.join(__dirname, '../public', user.avatar.replace(`${process.env.SERVER_URL}`, ''));
-          try {
-            fs.unlinkSync(oldAvatarPath);
-          } catch (err) {}
-        }
-        updateData.avatar = `${process.env.SERVER_URL}/uploads/${req.file.filename}`;
-        avatarFilename = req.file.filename;
-        const filePath = path.join(__dirname, '../public/uploads', req.file.filename);
-        if (!fs.existsSync(filePath)) {
-          return res.status(500).json({ message: 'Failed to save avatar' });
+        try {
+          // Ensure uploads directory exists
+          const uploadsDir = path.join(__dirname, '../public/uploads');
+          fs.mkdirSync(uploadsDir, { recursive: true });
+          
+          // Get current user
+          const user = await User.findById(userId);
+          
+          // Remove old avatar if it exists
+          if (user.avatar && user.avatar.includes('/uploads/')) {
+            try {
+              // Extract filename from avatar URL
+              const oldAvatarFilename = user.avatar.split('/').pop().split('?')[0];
+              const oldAvatarPath = path.join(__dirname, '../public/uploads', oldAvatarFilename);
+              
+              if (fs.existsSync(oldAvatarPath)) {
+                fs.unlinkSync(oldAvatarPath);
+                console.log(`Deleted old avatar: ${oldAvatarPath}`);
+              }
+            } catch (err) {
+              console.error('Error deleting old avatar:', err);
+              // Continue even if old avatar deletion fails
+            }
+          }
+          
+          // Set new avatar path
+          avatarFilename = req.file.filename;
+          const filePath = path.join(uploadsDir, req.file.filename);
+          
+          // Verify the file was saved
+          if (!fs.existsSync(filePath)) {
+            console.error(`Avatar file not found at ${filePath}`);
+            return res.status(500).json({ message: 'Failed to save avatar' });
+          }
+          
+          // Update avatar URL
+          // Make sure we're using the correct server URL
+          const serverUrl = process.env.SERVER_URL || 'http://localhost:5000';
+          updateData.avatar = `${serverUrl}/uploads/${req.file.filename}`;
+          console.log(`New avatar set: ${updateData.avatar}`);
+        } catch (avatarError) {
+          console.error('Avatar processing error:', avatarError);
+          return res.status(500).json({ 
+            message: 'Error processing avatar upload', 
+            error: process.env.NODE_ENV === 'development' ? avatarError.message : undefined 
+          });
         }
       }
 
@@ -209,6 +278,7 @@ const updateUserSettings = async (req, res) => {
         avatarFilename,
       });
     } catch (error) {
+      console.error('Profile update error:', error);
       res.status(500).json({
         success: false,
         message: 'Error updating profile',
