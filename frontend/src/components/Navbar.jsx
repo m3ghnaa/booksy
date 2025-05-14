@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
        useEffect(() => {
          if (user?.avatar) {
            // Use the production backend URL in production, fallback to localhost in development
-           const serverUrl = process.env.REACT_APP_SERVER_URL || 'https://booksy-backend.onrender.com';
+           const serverUrl = process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com';
            // If the avatar URL contains localhost, reconstruct it using the server URL
            if (user.avatar.includes('localhost')) {
              const avatarPath = user.avatar.split('/uploads/')[1]; // Extract the file path
