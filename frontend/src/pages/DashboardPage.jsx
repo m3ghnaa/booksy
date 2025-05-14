@@ -105,6 +105,7 @@ const Dashboard = () => {
         console.log('Fetching books from API...');
         const resBooks = await api.get('/books');
         const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
+        console.log('Books API response:', resBooks.data); // Debug log
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
       } else {
         console.log('Using cached books data...');
@@ -116,15 +117,17 @@ const Dashboard = () => {
         console.log('Fetching user stats from API...');
         const resStats = await api.get('/users/stats');
         const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
+        console.log('Stats API response:', resStats.data); // Debug log
 
-        // Dispatch stats as a plain object
-        dispatch(setUserStats({
+        const statsPayload = {
           maxReadingStreak,
           currentStreak,
           totalPagesRead,
           totalBooksRead: completedBooks,
           lastFetched: Date.now(),
-        }));
+        };
+        console.log('Dispatching setUserStats with payload:', statsPayload); // Debug log
+        dispatch(setUserStats(statsPayload));
 
         // Update local state
         setMaxReadingStreak(maxReadingStreak);
@@ -145,21 +148,33 @@ const Dashboard = () => {
         console.log('Fetching reading activity from API...');
         const resActivity = await api.get('/users/reading-activity');
         const { readingActivity = [] } = resActivity.data;
+        console.log('Reading Activity API response:', resActivity.data); // Debug log
 
-        // Dispatch reading activity with the correct structure
-        dispatch(setReadingActivity({
+        // Ensure readingActivity is an array
+        if (!Array.isArray(readingActivity)) {
+          console.error('readingActivity is not an array:', readingActivity);
+          throw new Error('Invalid reading activity data: expected an array');
+        }
+
+        const activityPayload = {
           data: readingActivity,
           lastFetched: Date.now(),
-        }));
+        };
+        console.log('Dispatching setReadingActivity with payload:', activityPayload); // Debug log
+        dispatch(setReadingActivity(activityPayload));
 
         setReadingActivity(readingActivity);
       } else {
         console.log('Using cached reading activity data...');
-        setReadingActivity(cachedActivity.data || []);
+        const cachedData = cachedActivity.data || [];
+        console.log('Cached reading activity data:', cachedData); // Debug log
+        setReadingActivity(Array.isArray(cachedData) ? cachedData : []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load your data');
+      // Reset readingActivity to an empty array on error
+      setReadingActivity([]);
     } finally {
       setLoading(false);
     }
@@ -207,19 +222,23 @@ const Dashboard = () => {
     toast.info('Chart refreshed');
   };
 
-  const chartData = React.useMemo(() => ({
-    labels: readingActivity.map((entry) => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-    datasets: [
-      {
-        label: 'Pages Read',
-        data: readingActivity.map((entry) => entry.pagesRead),
-        fill: false,
-        backgroundColor: 'rgba(0, 184, 148, 0.6)',
-        borderColor: 'rgb(0, 184, 148)',
-        tension: 0.1,
-      },
-    ],
-  }), [readingActivity]);
+  const chartData = React.useMemo(() => {
+    // Ensure readingActivity is an array
+    const activityArray = Array.isArray(readingActivity) ? readingActivity : [];
+    return {
+      labels: activityArray.map((entry) => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+      datasets: [
+        {
+          label: 'Pages Read',
+          data: activityArray.map((entry) => entry.pagesRead || 0),
+          fill: false,
+          backgroundColor: 'rgba(0, 184, 148, 0.6)',
+          borderColor: 'rgb(0, 184, 148)',
+          tension: 0.1,
+        },
+      ],
+    };
+  }, [readingActivity]);
 
   const chartOptions = React.useMemo(() => ({
     responsive: true,
