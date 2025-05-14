@@ -73,26 +73,71 @@ const Dashboard = () => {
     user: state.auth.user,
     books: state.books,
   }));
+  
+  // Get cached data from Redux store
+  const cachedStats = useSelector((state) => state.books.stats);
+  const cachedActivity = useSelector((state) => state.books.readingActivity);
 
   const fetchBooksAndStats = async () => {
     setLoading(true);
     try {
-      const resBooks = await api.get('/books');
-      const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
-      dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
+      // Check if we need to fetch books (if not fetched or older than 5 minutes)
+      const shouldFetchBooks = !books.lastFetched || (Date.now() - books.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
+      
+      if (shouldFetchBooks) {
+        console.log('Fetching books from API...');
+        const resBooks = await api.get('/books');
+        const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
+        dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
+      } else {
+        console.log('Using cached books data...');
+      }
 
-      const resStats = await api.get('/users/stats');
-      const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
+      // Check if we need to fetch stats (if not fetched or older than 5 minutes)
+      const shouldFetchStats = !cachedStats.lastFetched || (Date.now() - cachedStats.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
+      
+      if (shouldFetchStats) {
+        console.log('Fetching user stats from API...');
+        const resStats = await api.get('/users/stats');
+        const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
+        
+        // Update Redux store
+        dispatch(setUserStats({ maxReadingStreak, currentStreak, totalPagesRead, totalBooksRead: completedBooks }));
+        
+        // Update local state
+        setMaxReadingStreak(maxReadingStreak);
+        setCurrentStreak(currentStreak);
+        setTotalPagesRead(totalPagesRead);
+        setTotalBooksRead(completedBooks);
+      } else {
+        console.log('Using cached stats data...');
+        // Use cached data from Redux
+        setMaxReadingStreak(cachedStats.maxReadingStreak);
+        setCurrentStreak(cachedStats.currentStreak);
+        setTotalPagesRead(cachedStats.totalPagesRead);
+        setTotalBooksRead(cachedStats.totalBooksRead);
+      }
 
-      const resActivity = await api.get('/users/reading-activity');
-      const { readingActivity = [] } = resActivity.data;
-
-      setMaxReadingStreak(maxReadingStreak);
-      setCurrentStreak(currentStreak);
-      setTotalPagesRead(totalPagesRead);
-      setTotalBooksRead(completedBooks);
-      setReadingActivity(readingActivity);
+      // Check if we need to fetch reading activity (if not fetched or older than 5 minutes)
+      const shouldFetchActivity = !cachedActivity.lastFetched || (Date.now() - cachedActivity.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
+      
+      if (shouldFetchActivity) {
+        console.log('Fetching reading activity from API...');
+        const resActivity = await api.get('/users/reading-activity');
+        const { readingActivity = [] } = resActivity.data;
+        
+        // Update Redux store
+        dispatch(setReadingActivity(readingActivity));
+        
+        // Update local state
+        setReadingActivity(readingActivity);
+      } else {
+        console.log('Using cached reading activity data...');
+        // Use cached data from Redux
+        setReadingActivity(cachedActivity.data);
+      }
     } catch (error) {
+      console.error('Error fetching data:', error);
       toast.error('Failed to load your data');
     } finally {
       setLoading(false);
@@ -141,7 +186,8 @@ const Dashboard = () => {
     toast.info('Chart refreshed');
   };
 
-  const chartData = {
+  // Memoize chart data to prevent unnecessary recalculations
+  const chartData = React.useMemo(() => ({
     labels: readingActivity.map((entry) => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
     datasets: [
       {
@@ -153,9 +199,10 @@ const Dashboard = () => {
         tension: 0.1,
       },
     ],
-  };
+  }), [readingActivity]);
 
-  const chartOptions = {
+  // Memoize chart options to prevent unnecessary recalculations
+  const chartOptions = React.useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     layout: {
@@ -218,7 +265,7 @@ const Dashboard = () => {
         },
       },
     },
-  };
+  }), []);
 
 
   const joinDate = user?.createdAt

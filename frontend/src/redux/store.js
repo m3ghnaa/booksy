@@ -21,12 +21,24 @@ const userPersistConfig = {
   whitelist: ['profile']
 };
 
+const booksPersistConfig = {
+  key: 'books',
+  storage,
+  whitelist: ['currentlyReading', 'wantToRead', 'finishedReading', 'lastFetched']
+};
+
+const searchPersistConfig = {
+  key: 'search',
+  storage,
+  whitelist: []
+};
+
 // Apply persist to reducers
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   user: persistReducer(userPersistConfig, userReducer),
-  books: bookReducer,
-  search: searchReducer
+  books: persistReducer(booksPersistConfig, bookReducer),
+  search: persistReducer(searchPersistConfig, searchReducer)
 });
 
 // Create the store

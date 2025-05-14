@@ -4,7 +4,19 @@ const initialState = {
   currentlyReading: [],
   wantToRead: [],
   finishedReading: [],
-  progressUpdated: false
+  progressUpdated: false,
+  lastFetched: null,
+  stats: {
+    maxReadingStreak: 0,
+    currentStreak: 0,
+    totalPagesRead: 0,
+    totalBooksRead: 0,
+    lastFetched: null
+  },
+  readingActivity: {
+    data: [],
+    lastFetched: null
+  }
 };
 
 const bookSlice = createSlice({
@@ -16,6 +28,7 @@ const bookSlice = createSlice({
       state.currentlyReading = currentlyReading || [];
       state.wantToRead = wantToRead || [];
       state.finishedReading = finishedReading || [];
+      state.lastFetched = Date.now();
     },
 
     addToReadingList: (state, action) => {
@@ -81,6 +94,20 @@ const bookSlice = createSlice({
 
     setProgressUpdated: (state, action) => {
       state.progressUpdated = action.payload;
+    },
+    
+    setUserStats: (state, action) => {
+      state.stats = {
+        ...action.payload,
+        lastFetched: Date.now()
+      };
+    },
+    
+    setReadingActivity: (state, action) => {
+      state.readingActivity = {
+        data: action.payload,
+        lastFetched: Date.now()
+      };
     }
   }
 });
@@ -91,7 +118,9 @@ export const {
   updateProgress, 
   updateBookStatus,
   removeBook,
-  setProgressUpdated
+  setProgressUpdated,
+  setUserStats,
+  setReadingActivity
 } = bookSlice.actions;
 
 export default bookSlice.reducer;
