@@ -27,6 +27,27 @@ const SettingsPage = () => {
   const [hasError, setHasError] = useState(false);
   const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
 
+
+  const getApiBaseUrl = () => {
+    return process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com/api';
+  };
+
+  const formatAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null;
+    
+    if (avatarPath.startsWith('http')) {
+      return avatarPath.replace('http:', 'https:');
+    }
+    
+
+    if (avatarPath.startsWith('/uploads/')) {
+      const baseUrl = getApiBaseUrl();
+      return `${baseUrl}${avatarPath}?t=${Date.now()}`;
+    }
+    
+    return avatarPath;
+  };
+
   useEffect(() => {
     if (isAuthenticated && !user && !isLoadingUser) {
       const fetchUser = async () => {
@@ -59,16 +80,7 @@ const SettingsPage = () => {
   
       // Handle avatar URL properly
       if (user.avatar) {
-        const serverUrl = process.env.REACT_APP_SERVER_URL || 'https://booksy-backend.onrender.com';
-        if (user.avatar.includes('localhost')) {
-          const avatarPath = user.avatar.split('/uploads/')[1];
-          setPreview(`${serverUrl}/uploads/${avatarPath}?t=${Date.now()}`);
-        } else {
-          const avatarUrl = user.avatar.startsWith('http:') ? 
-            user.avatar.replace('http:', 'https:') : 
-            user.avatar;
-          setPreview(`${avatarUrl}?t=${Date.now()}`);
-        }
+        setPreview(formatAvatarUrl(user.avatar));
       } else {
         setPreview(null);
       }
@@ -129,7 +141,7 @@ const SettingsPage = () => {
       };
       reader.readAsDataURL(file);
     } else {
-      setPreview(user?.avatar ? `${user.avatar}?t=${Date.now()}` : null);
+      setPreview(user?.avatar ? formatAvatarUrl(user.avatar) : null);
       setHasError(false);
     }
     if (errors.avatar) {
@@ -205,19 +217,19 @@ const SettingsPage = () => {
         }
       });
 
-      // Ensure we're using HTTPS for avatar URLs in production
-      let serverUrl = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
-      if (serverUrl.includes('onrender.com') && serverUrl.startsWith('http:')) {
-        serverUrl = serverUrl.replace('http:', 'https:');
+      // Handle the avatar URL from the response
+      let updatedAvatar = response.data.user.avatar;
+      
+      // If we got an avatarFilename back and need to construct the URL
+      if (response.data.avatarFilename) {
+        updatedAvatar = formatAvatarUrl(`/uploads/${response.data.avatarFilename}`);
+      } else if (updatedAvatar) {
+        updatedAvatar = formatAvatarUrl(updatedAvatar);
       }
       
       const updatedUser = {
         ...response.data.user,
-        avatar: response.data.avatarFilename
-          ? `${serverUrl}/uploads/${response.data.avatarFilename}?t=${Date.now()}`
-          : response.data.user.avatar && response.data.user.avatar.startsWith('http:') && response.data.user.avatar.includes('onrender.com')
-            ? response.data.user.avatar.replace('http:', 'https:')
-            : response.data.user.avatar
+        avatar: updatedAvatar
       };
 
       dispatch(updateUser(updatedUser));
@@ -225,7 +237,11 @@ const SettingsPage = () => {
 
       // Fetch latest user data to ensure Redux store is synchronized
       const refreshResponse = await api.get('/auth/me');
-      dispatch(updateUser(refreshResponse.data.user));
+      const refreshedUser = {
+        ...refreshResponse.data.user,
+        avatar: formatAvatarUrl(refreshResponse.data.user.avatar)
+      };
+      dispatch(updateUser(refreshedUser));
 
       setPreview(updatedUser.avatar);
       setFormData((prev) => ({
@@ -339,19 +355,22 @@ const SettingsPage = () => {
             {errors.avatar && <div className="invalid-feedback">{errors.avatar}</div>}
           </div>
 
-          {preview && !preview.includes('localhost') ? (
+          {preview ? (
             <div className="mb-3">
               <label className="form-label">Avatar Preview</label>
-              <img
-                src={preview}
-                alt="Avatar Preview"
-                className="img-fluid rounded"
-                style={{ maxWidth: '100px', maxHeight: '100px' }}
-                onError={() => {
-                  setHasError(true);
-                  setPreview(null);
-                }}
-              />
+              <div>
+                <img
+                  src={preview}
+                  alt="Avatar Preview"
+                  className="img-fluid rounded"
+                  style={{ maxWidth: '100px', maxHeight: '100px' }}
+                  onError={() => {
+                    console.error('Failed to load avatar image');
+                    setHasError(true);
+                    setPreview(null);
+                  }}
+                />
+              </div>
             </div>
           ) : (
             <div className="mb-3">
