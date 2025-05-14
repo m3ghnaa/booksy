@@ -161,6 +161,7 @@ const getUserStats = async (req, res) => {
 /**
  * Update user settings
  */
+
 const updateUserSettings = async (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
@@ -202,7 +203,7 @@ const updateUserSettings = async (req, res) => {
         updateData.readingGoal = parseInt(readingGoal);
       }
 
-      let avatarFilename = null;
+      // Handle avatar upload
       if (req.file) {
         try {
           // Ensure uploads directory exists
@@ -230,7 +231,7 @@ const updateUserSettings = async (req, res) => {
           }
           
           // Set new avatar path
-          avatarFilename = req.file.filename;
+          const avatarFilename = req.file.filename;
           const filePath = path.join(uploadsDir, req.file.filename);
           
           // Verify the file was saved
@@ -239,16 +240,14 @@ const updateUserSettings = async (req, res) => {
             return res.status(500).json({ message: 'Failed to save avatar' });
           }
           
-          // Update avatar URL
-          // Make sure we're using the correct server URL with HTTPS for production
-          let serverUrl = process.env.SERVER_URL || 'http://localhost:5000';
+          // Determine correct server URL
+          // Use relative URL in production to avoid HTTP/HTTPS issues
+          const isProduction = process.env.NODE_ENV === 'production';
+          const avatarUrl = isProduction 
+            ? `/uploads/${req.file.filename}` 
+            : `${process.env.SERVER_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
           
-          // Ensure HTTPS is used for production URLs
-          if (serverUrl.includes('onrender.com') && serverUrl.startsWith('http:')) {
-            serverUrl = serverUrl.replace('http:', 'https:');
-          }
-          
-          updateData.avatar = `${serverUrl}/uploads/${req.file.filename}`;
+          updateData.avatar = avatarUrl;
           console.log(`New avatar set: ${updateData.avatar}`);
         } catch (avatarError) {
           console.error('Avatar processing error:', avatarError);
@@ -281,7 +280,8 @@ const updateUserSettings = async (req, res) => {
           favoriteGenre: updatedUser.favoriteGenre,
           readingGoal: updatedUser.readingGoal,
         },
-        avatarFilename,
+        // Send the filename separately for the frontend
+        avatarFilename: req.file ? req.file.filename : null,
       });
     } catch (error) {
       console.error('Profile update error:', error);
