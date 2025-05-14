@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { getUserStats, deleteAvatar } = require('../controllers/userController');
+const { getUserStats, updateUserSettings, updateUserProfile, getCurrentUser, deleteAvatar } = require('../controllers/userController');
 const { getReadingActivity } = require('../controllers/readingActivityController');
 const { protect } = require('../middlewares/authMiddleware');
-const { updateUserSettings } = require('../controllers/userController');
 
 router.get('/stats', protect, getUserStats);
 router.get('/reading-activity', protect, getReadingActivity);
-router.put('/settings', protect, updateUserSettings);
+router.get('/me', protect, getCurrentUser);
+router.put('/update-settings', protect, updateUserSettings);
+router.put('/profile', protect, updateUserProfile);
 router.delete('/avatar', protect, deleteAvatar);
 
 module.exports = router;

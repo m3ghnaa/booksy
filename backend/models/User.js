@@ -44,6 +44,8 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  favoriteGenre: { type: String, default: '' },
+  readingGoal: { type: Number, default: 0 },
   maxReadingStreak: {
     type: Number,
     default: 0
@@ -77,7 +79,8 @@ const userSchema = new mongoose.Schema({
       return ret;
     }
   }
-});
+},
+);
 
 /**
  * Match user entered password to hashed password in database

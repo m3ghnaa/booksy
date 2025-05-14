@@ -5,7 +5,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-
 // Base URL for serving uploads (adjust based on your server URL)
 const BASE_URL = process.env.SERVER_URL || 'http://localhost:5000';
 
@@ -125,8 +124,6 @@ const getUserStats = async (req, res) => {
   }
 };
 
-
-
 /**
  * Update user settings
  */
@@ -138,7 +135,7 @@ const updateUserSettings = async (req, res) => {
 
     try {
       const userId = req.user.id;
-      const { name, email } = req.body;
+      const { name, email, favoriteGenre, readingGoal } = req.body;
 
       // Validate inputs
       if (!name || name.trim() === '') {
@@ -146,6 +143,9 @@ const updateUserSettings = async (req, res) => {
       }
       if (!email || !validator.isEmail(email)) {
         return res.status(400).json({ message: 'Valid email is required' });
+      }
+      if (readingGoal !== undefined && (isNaN(readingGoal) || parseInt(readingGoal) < 0)) {
+        return res.status(400).json({ message: 'Reading goal must be a non-negative number' });
       }
 
       // Check if email is taken by another user
@@ -157,8 +157,15 @@ const updateUserSettings = async (req, res) => {
       // Prepare update data
       const updateData = {
         name: name.trim(),
-        email: email.toLowerCase()
+        email: email.toLowerCase(),
       };
+
+      if (favoriteGenre !== undefined) {
+        updateData.favoriteGenre = favoriteGenre.trim();
+      }
+      if (readingGoal !== undefined) {
+        updateData.readingGoal = parseInt(readingGoal);
+      }
 
       let avatarFilename = null;
       if (req.file) {
@@ -195,20 +202,82 @@ const updateUserSettings = async (req, res) => {
           _id: updatedUser._id,
           name: updatedUser.name,
           email: updatedUser.email,
-          avatar: updatedUser.avatar
+          avatar: updatedUser.avatar,
+          favoriteGenre: updatedUser.favoriteGenre,
+          readingGoal: updatedUser.readingGoal,
         },
-        avatarFilename
+        avatarFilename,
       });
     } catch (error) {
       res.status(500).json({
         success: false,
         message: 'Error updating profile',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
       });
     }
   });
 };
 
+/**
+ * Update user profile (without avatar upload)
+ */
+const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, favoriteGenre, readingGoal } = req.body;
+
+    // Validate inputs
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+    if (readingGoal !== undefined && (isNaN(readingGoal) || parseInt(readingGoal) < 0)) {
+      return res.status(400).json({ message: 'Reading goal must be a non-negative number' });
+    }
+
+    // Prepare update data
+    const updateData = {
+      name: name.trim(),
+    };
+
+    if (favoriteGenre !== undefined) {
+      updateData.favoriteGenre = favoriteGenre.trim();
+    }
+    if (readingGoal !== undefined) {
+      updateData.readingGoal = parseInt(readingGoal);
+    }
+
+    // Update user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar,
+        favoriteGenre: updatedUser.favoriteGenre,
+        readingGoal: updatedUser.readingGoal,
+        createdAt: updatedUser.createdAt,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating profile',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    });
+  }
+};
 
 /**
  * Get current user
@@ -220,22 +289,32 @@ const getCurrentUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    console.log('Fetched current user:', { _id: user._id, name: user.name, email: user.email, avatar: user.avatar });
+    console.log('Fetched current user:', {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      favoriteGenre: user.favoriteGenre,
+      readingGoal: user.readingGoal,
+    });
     res.status(200).json({
       success: true,
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar || ''
-      }
+        avatar: user.avatar || '',
+        favoriteGenre: user.favoriteGenre || '',
+        readingGoal: user.readingGoal || 0,
+        createdAt: user.createdAt,
+      },
     });
   } catch (error) {
     console.error('Error fetching current user:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching user data',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -279,15 +358,18 @@ const deleteAvatar = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar || ''
-      }
+        avatar: user.avatar || '',
+        favoriteGenre: user.favoriteGenre || '',
+        readingGoal: user.readingGoal || 0,
+        createdAt: user.createdAt,
+      },
     });
   } catch (error) {
     console.error('Error deleting avatar:', error);
     res.status(500).json({
       success: false,
       message: 'Error deleting avatar',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -295,6 +377,7 @@ const deleteAvatar = async (req, res) => {
 module.exports = {
   getUserStats,
   updateUserSettings,
+  updateUserProfile,
   getCurrentUser,
-  deleteAvatar
+  deleteAvatar,
 };

@@ -16,7 +16,9 @@ const SettingsPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    avatar: null
+    avatar: null,
+    favoriteGenre: '',
+    readingGoal: ''
   });
   const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
@@ -50,7 +52,9 @@ const SettingsPage = () => {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        avatar: null
+        avatar: null,
+        favoriteGenre: user.favoriteGenre || '',
+        readingGoal: user.readingGoal ? user.readingGoal.toString() : ''
       });
       setPreview(user.avatar ? `${user.avatar}?t=${Date.now()}` : null);
       setHasError(false);
@@ -64,6 +68,9 @@ const SettingsPage = () => {
     }
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Valid email is required';
+    }
+    if (formData.readingGoal && (isNaN(formData.readingGoal) || parseInt(formData.readingGoal) < 0)) {
+      newErrors.readingGoal = 'Reading goal must be a non-negative number';
     }
     if (formData.avatar) {
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
@@ -170,6 +177,8 @@ const SettingsPage = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
+      formDataToSend.append('favoriteGenre', formData.favoriteGenre);
+      formDataToSend.append('readingGoal', formData.readingGoal);
       if (formData.avatar) {
         formDataToSend.append('avatar', formData.avatar);
       }
@@ -259,6 +268,37 @@ const SettingsPage = () => {
               disabled={isSubmitting}
             />
             {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="favoriteGenre" className="form-label">Favorite Genre</label>
+            <input
+              type="text"
+              id="favoriteGenre"
+              name="favoriteGenre"
+              value={formData.favoriteGenre}
+              onChange={handleChange}
+              className={`form-control ${errors.favoriteGenre ? 'is-invalid' : ''}`}
+              disabled={isSubmitting}
+              placeholder="e.g. Science Fiction, Fantasy, Mystery"
+            />
+            {errors.favoriteGenre && <div className="invalid-feedback">{errors.favoriteGenre}</div>}
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="readingGoal" className="form-label">Reading Goal (books per year)</label>
+            <input
+              type="number"
+              id="readingGoal"
+              name="readingGoal"
+              value={formData.readingGoal}
+              onChange={handleChange}
+              className={`form-control ${errors.readingGoal ? 'is-invalid' : ''}`}
+              disabled={isSubmitting}
+              min="0"
+              placeholder="e.g. 12"
+            />
+            {errors.readingGoal && <div className="invalid-feedback">{errors.readingGoal}</div>}
           </div>
 
           <div className="mb-3">
