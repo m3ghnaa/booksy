@@ -56,14 +56,14 @@ const SettingsPage = () => {
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal ? user.readingGoal.toString() : ''
       });
-      
+  
       // Handle avatar URL properly
       if (user.avatar) {
-        // Skip localhost URLs
+        const serverUrl = process.env.REACT_APP_SERVER_URL || 'https://booksy-backend.onrender.com';
         if (user.avatar.includes('localhost')) {
-          setPreview(null);
+          const avatarPath = user.avatar.split('/uploads/')[1];
+          setPreview(`${serverUrl}/uploads/${avatarPath}?t=${Date.now()}`);
         } else {
-          // Ensure HTTPS for production URLs
           const avatarUrl = user.avatar.startsWith('http:') ? 
             user.avatar.replace('http:', 'https:') : 
             user.avatar;
@@ -72,7 +72,7 @@ const SettingsPage = () => {
       } else {
         setPreview(null);
       }
-      
+  
       setHasError(false);
     }
   }, [user]);

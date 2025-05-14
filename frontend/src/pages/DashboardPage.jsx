@@ -367,21 +367,25 @@ const Dashboard = () => {
               <div className="row mb-4">
                 <div className="col-12">
                   <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
-                    <div className="me-3">
-                      {user?.avatar && !user.avatar.includes('localhost') && !hasAvatarError ? (
-                        <img
-                          src={user.avatar && user.avatar.startsWith('http:') 
-                            ? user.avatar.replace('http:', 'https:')
-                            : user.avatar}
-                          alt="User Avatar"
-                          className="rounded-circle profile-avatar"
-                          style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-                          onError={() => setHasAvatarError(true)}
-                        />
-                      ) : (
-                        <FaUserCircle className="text-muted profile-avatar" style={{ width: '100px', height: '100px' }} />
-                      )}
-                    </div>
+                  <div className="me-3">
+  {user?.avatar && !hasAvatarError ? (
+    <img
+      src={
+        user.avatar.includes('localhost')
+          ? `${process.env.REACT_APP_SERVER_URL || 'https://booksy-backend.onrender.com'}/uploads/${user.avatar.split('/uploads/')[1]}?t=${Date.now()}`
+          : user.avatar.startsWith('http:') 
+            ? user.avatar.replace('http:', 'https:')
+            : user.avatar
+      }
+      alt="User Avatar"
+      className="rounded-circle profile-avatar"
+      style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+      onError={() => setHasAvatarError(true)}
+    />
+  ) : (
+    <FaUserCircle className="text-muted profile-avatar" style={{ width: '100px', height: '100px' }} />
+  )}
+</div>
                     <div className="flex-grow-1">
                       <h4 className="profile-name mb-1">{user?.name || 'User'}</h4>
                       <p className="text-muted profile-info mb-1">Member since {joinDate}</p>
