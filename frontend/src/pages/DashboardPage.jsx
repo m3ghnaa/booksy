@@ -74,17 +74,33 @@ const Dashboard = () => {
     user: state.auth.user,
     books: state.books,
   }));
-  
+
   // Get cached data from Redux store
   const cachedStats = useSelector((state) => state.books.stats);
   const cachedActivity = useSelector((state) => state.books.readingActivity);
 
+  // Production backend URL
+  const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
+
+  // Construct full avatar URL
+  const formatAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null;
+    if (avatarPath.startsWith('/uploads/')) {
+      return `${API_URL}${avatarPath}`;
+    }
+    // Handle legacy localhost URLs
+    if (avatarPath.includes('localhost')) {
+      const filename = avatarPath.split('/uploads/')[1];
+      return `${API_URL}/uploads/${filename}`;
+    }
+    return avatarPath;
+  };
+
   const fetchBooksAndStats = async () => {
     setLoading(true);
     try {
-      // Check if we need to fetch books (if not fetched or older than 5 minutes)
+      // Fetch books
       const shouldFetchBooks = !books.lastFetched || (Date.now() - books.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
-      
       if (shouldFetchBooks) {
         console.log('Fetching books from API...');
         const resBooks = await api.get('/books');
@@ -94,17 +110,22 @@ const Dashboard = () => {
         console.log('Using cached books data...');
       }
 
-      // Check if we need to fetch stats (if not fetched or older than 5 minutes)
+      // Fetch user stats
       const shouldFetchStats = !cachedStats.lastFetched || (Date.now() - cachedStats.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
-      
       if (shouldFetchStats) {
         console.log('Fetching user stats from API...');
         const resStats = await api.get('/users/stats');
         const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
-        
-        // Update Redux store
-        dispatch(setUserStats({ maxReadingStreak, currentStreak, totalPagesRead, totalBooksRead: completedBooks }));
-        
+
+        // Dispatch stats as a plain object
+        dispatch(setUserStats({
+          maxReadingStreak,
+          currentStreak,
+          totalPagesRead,
+          totalBooksRead: completedBooks,
+          lastFetched: Date.now(),
+        }));
+
         // Update local state
         setMaxReadingStreak(maxReadingStreak);
         setCurrentStreak(currentStreak);
@@ -112,30 +133,29 @@ const Dashboard = () => {
         setTotalBooksRead(completedBooks);
       } else {
         console.log('Using cached stats data...');
-        // Use cached data from Redux
-        setMaxReadingStreak(cachedStats.maxReadingStreak);
-        setCurrentStreak(cachedStats.currentStreak);
-        setTotalPagesRead(cachedStats.totalPagesRead);
-        setTotalBooksRead(cachedStats.totalBooksRead);
+        setMaxReadingStreak(cachedStats.maxReadingStreak || 0);
+        setCurrentStreak(cachedStats.currentStreak || 0);
+        setTotalPagesRead(cachedStats.totalPagesRead || 0);
+        setTotalBooksRead(cachedStats.totalBooksRead || 0);
       }
 
-      // Check if we need to fetch reading activity (if not fetched or older than 5 minutes)
+      // Fetch reading activity
       const shouldFetchActivity = !cachedActivity.lastFetched || (Date.now() - cachedActivity.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
-      
       if (shouldFetchActivity) {
         console.log('Fetching reading activity from API...');
         const resActivity = await api.get('/users/reading-activity');
         const { readingActivity = [] } = resActivity.data;
-        
-        // Update Redux store
-        dispatch(setReadingActivity(readingActivity));
-        
-        // Update local state
+
+        // Dispatch reading activity with the correct structure
+        dispatch(setReadingActivity({
+          data: readingActivity,
+          lastFetched: Date.now(),
+        }));
+
         setReadingActivity(readingActivity);
       } else {
         console.log('Using cached reading activity data...');
-        // Use cached data from Redux
-        setReadingActivity(cachedActivity.data);
+        setReadingActivity(cachedActivity.data || []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -187,7 +207,6 @@ const Dashboard = () => {
     toast.info('Chart refreshed');
   };
 
-  // Memoize chart data to prevent unnecessary recalculations
   const chartData = React.useMemo(() => ({
     labels: readingActivity.map((entry) => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
     datasets: [
@@ -202,7 +221,6 @@ const Dashboard = () => {
     ],
   }), [readingActivity]);
 
-  // Memoize chart options to prevent unnecessary recalculations
   const chartOptions = React.useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
@@ -268,10 +286,9 @@ const Dashboard = () => {
     },
   }), []);
 
-
   const joinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    : 'May 2025'; 
+    : 'May 2025';
 
   return (
     <>
@@ -367,25 +384,19 @@ const Dashboard = () => {
               <div className="row mb-4">
                 <div className="col-12">
                   <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
-                  <div className="me-3">
-  {user?.avatar && !hasAvatarError ? (
-    <img
-      src={
-        user.avatar.includes('localhost')
-          ? `${process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com'}/uploads/${user.avatar.split('/uploads/')[1]}?t=${Date.now()}`
-          : user.avatar.startsWith('http:') 
-            ? user.avatar.replace('http:', 'https:')
-            : user.avatar
-      }
-      alt="User Avatar"
-      className="rounded-circle profile-avatar"
-      style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-      onError={() => setHasAvatarError(true)}
-    />
-  ) : (
-    <FaUserCircle className="text-muted profile-avatar" style={{ width: '100px', height: '100px' }} />
-  )}
-</div>
+                    <div className="me-3">
+                      {user?.avatar && !hasAvatarError ? (
+                        <img
+                          src={formatAvatarUrl(user.avatar)}
+                          alt="User Avatar"
+                          className="rounded-circle profile-avatar"
+                          style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                          onError={() => setHasAvatarError(true)}
+                        />
+                      ) : (
+                        <FaUserCircle className="text-muted profile-avatar" style={{ width: '100px', height: '100px' }} />
+                      )}
+                    </div>
                     <div className="flex-grow-1">
                       <h4 className="profile-name mb-1">{user?.name || 'User'}</h4>
                       <p className="text-muted profile-info mb-1">Member since {joinDate}</p>
@@ -399,7 +410,6 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-
 
               <div className="row mt-1 mt-md-5">
                 <div className="col-12 col-sm-6 text-center mb-3 mb-sm-0">
