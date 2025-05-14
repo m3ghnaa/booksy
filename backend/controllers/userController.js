@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Base URL for serving uploads (adjust based on your server URL)
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5000';
+const SERVER_URL = process.env.SERVER_URL;
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../public/uploads');
