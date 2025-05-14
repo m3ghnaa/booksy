@@ -7,7 +7,7 @@ const { protect } = require('../middlewares/authMiddleware');
 router.get('/stats', protect, getUserStats);
 router.get('/reading-activity', protect, getReadingActivity);
 router.get('/me', protect, getCurrentUser);
-router.put('/update-settings', protect, updateUserSettings);
+router.put('/settings', protect, updateUserSettings);
 router.put('/profile', protect, updateUserProfile);
 router.delete('/avatar', protect, deleteAvatar);
 
