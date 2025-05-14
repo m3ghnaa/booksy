@@ -372,7 +372,7 @@ const Dashboard = () => {
     <img
       src={
         user.avatar.includes('localhost')
-          ? `${process.env.REACT_APP_SERVER_URL || 'https://booksy-backend.onrender.com'}/uploads/${user.avatar.split('/uploads/')[1]}?t=${Date.now()}`
+          ? `${process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com'}/uploads/${user.avatar.split('/uploads/')[1]}?t=${Date.now()}`
           : user.avatar.startsWith('http:') 
             ? user.avatar.replace('http:', 'https:')
             : user.avatar

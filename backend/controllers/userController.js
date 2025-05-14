@@ -230,7 +230,7 @@ const updateUserSettings = async (req, res) => {
             }
           }
           
-          // Set new avatar path
+          // Set new avatar path (always use relative URL)
           const avatarFilename = req.file.filename;
           const filePath = path.join(uploadsDir, req.file.filename);
           
@@ -240,12 +240,8 @@ const updateUserSettings = async (req, res) => {
             return res.status(500).json({ message: 'Failed to save avatar' });
           }
           
-          // Determine correct server URL
-          // Use relative URL in production to avoid HTTP/HTTPS issues
-          const isProduction = process.env.NODE_ENV === 'production';
-          const avatarUrl = isProduction 
-            ? `/uploads/${req.file.filename}` 
-            : `${process.env.SERVER_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`;
+          // Always store relative URL in the database
+          const avatarUrl = `/uploads/${req.file.filename}`;
           
           updateData.avatar = avatarUrl;
           console.log(`New avatar set: ${updateData.avatar}`);
