@@ -189,11 +189,19 @@ const SettingsPage = () => {
         }
       });
 
+      // Ensure we're using HTTPS for avatar URLs in production
+      let serverUrl = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
+      if (serverUrl.includes('onrender.com') && serverUrl.startsWith('http:')) {
+        serverUrl = serverUrl.replace('http:', 'https:');
+      }
+      
       const updatedUser = {
         ...response.data.user,
         avatar: response.data.avatarFilename
-          ? `${process.env.REACT_APP_SERVER_URL}/uploads/${response.data.avatarFilename}?t=${Date.now()}`
-          : response.data.user.avatar
+          ? `${serverUrl}/uploads/${response.data.avatarFilename}?t=${Date.now()}`
+          : response.data.user.avatar && response.data.user.avatar.startsWith('http:') && response.data.user.avatar.includes('onrender.com')
+            ? response.data.user.avatar.replace('http:', 'https:')
+            : response.data.user.avatar
       };
 
       dispatch(updateUser(updatedUser));

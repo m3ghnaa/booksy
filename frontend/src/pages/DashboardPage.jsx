@@ -369,7 +369,9 @@ const Dashboard = () => {
                     <div className="me-3">
                       {user?.avatar ? (
                         <img
-                          src={user.avatar}
+                          src={user.avatar && user.avatar.startsWith('http:') && user.avatar.includes('onrender.com')
+                            ? user.avatar.replace('http:', 'https:')
+                            : user.avatar}
                           alt="User Avatar"
                           className="rounded-circle profile-avatar"
                           style={{ width: '100px', height: '100px', objectFit: 'cover' }}

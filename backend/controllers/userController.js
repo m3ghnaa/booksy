@@ -240,8 +240,14 @@ const updateUserSettings = async (req, res) => {
           }
           
           // Update avatar URL
-          // Make sure we're using the correct server URL
-          const serverUrl = process.env.SERVER_URL || 'http://localhost:5000';
+          // Make sure we're using the correct server URL with HTTPS for production
+          let serverUrl = process.env.SERVER_URL || 'http://localhost:5000';
+          
+          // Ensure HTTPS is used for production URLs
+          if (serverUrl.includes('onrender.com') && serverUrl.startsWith('http:')) {
+            serverUrl = serverUrl.replace('http:', 'https:');
+          }
+          
           updateData.avatar = `${serverUrl}/uploads/${req.file.filename}`;
           console.log(`New avatar set: ${updateData.avatar}`);
         } catch (avatarError) {
