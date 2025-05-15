@@ -5,7 +5,7 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { clearSearchResults } from '../redux/searchSlice';
 import { setBooks, setProgressUpdated, setUserStats } from '../redux/bookSlice';
-import { logoutUser, syncUserWithUserSlice } from '../redux/authSlice';
+import { logoutUser } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/Navbar';
@@ -20,6 +20,15 @@ const avatarIcons = {
   FaUserSecret: FaUserSecret,
   FaUserTie: FaUserTie
 };
+
+// Avatar options with styles (same as SettingsPage.jsx)
+const avatarOptions = [
+  { icon: FaUserCircle, name: 'FaUserCircle', style: { color: '#007bff', backgroundColor: '#e7f1ff', borderColor: '#007bff' } },
+  { icon: FaUserAstronaut, name: 'FaUserAstronaut', style: { color: '#ff5733', backgroundColor: '#ffe7e3', borderColor: '#ff5733' } },
+  { icon: FaUserNinja, name: 'FaUserNinja', style: { color: '#28a745', backgroundColor: '#e6f4ea', borderColor: '#28a745' } },
+  { icon: FaUserSecret, name: 'FaUserSecret', style: { color: '#6f42c1', backgroundColor: '#f3e8ff', borderColor: '#6f42c1' } },
+  { icon: FaUserTie, name: 'FaUserTie', style: { color: '#dc3545', backgroundColor: '#f8e1e4', borderColor: '#dc3545' } }
+];
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -207,8 +216,10 @@ const Dashboard = () => {
     ? new Date(authUser.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : 'May 2025';
 
-  // Dynamically select the avatar icon
-  const AvatarIcon = avatarIcons[authUser?.avatar] || FaUserCircle;
+  // Dynamically select the avatar icon and its style
+  const selectedAvatar = avatarOptions.find(option => option.name === (authUser?.avatar || 'FaUserCircle')) || avatarOptions[0];
+  const AvatarIcon = selectedAvatar.icon;
+  const avatarStyle = selectedAvatar.style;
 
   return (
     <>
@@ -227,9 +238,25 @@ const Dashboard = () => {
           .responsive-card p { font-size: 1rem; }
           .responsive-card h5 { font-size: 1.1rem; }
           .chart-container { height: 350px; width: 100%; position: relative; }
-          .profile-avatar { width: 100px; height: 100px; object-fit: cover; }
+          .profile-avatar { width: 100px; height: 100px; }
           .profile-name { font-size: 1.8rem; }
           .profile-info { font-size: 1rem; }
+
+          /* Avatar styling (same as SettingsPage.jsx) */
+          .avatar-option {
+            padding: 10px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            width: 100px;
+            height: 100px;
+            border: 1px solid;
+          }
+          .avatar-icon {
+            font-size: 3rem; /* Adjusted for Dashboard size */
+          }
 
           @media (max-width: 576px) {
             .responsive-card { height: 100px !important; min-height: 100px !important; padding: 10px !important; }
@@ -247,6 +274,8 @@ const Dashboard = () => {
             .responsive-card .position-absolute .text-danger { font-size: 1.2rem !important; }
             .responsive-card .position-absolute span { font-size: 1.5rem !important; }
             .card.p-3 { padding: 10px !important; }
+            .avatar-option { width: 60px !important; height: 60px !important; }
+            .avatar-icon { font-size: 2rem !important; }
           }
           @media (min-width: 576px) and (max-width: 768px) {
             .responsive-card { height: 110px !important; min-height: 110px !important; padding: 15px !important; }
@@ -264,6 +293,8 @@ const Dashboard = () => {
             .responsive-card .position-absolute .text-danger { font-size: 1.4rem !important; }
             .responsive-card .position-absolute span { font-size: 1.8rem !important; }
             .card.p-3 { padding: 15px !important; }
+            .avatar-option { width: 80px !important; height: 80px !important; }
+            .avatar-icon { font-size: 2.5rem !important; }
           }
           @media (min-width: 769px) {
             .responsive-card { padding: 20px !important; }
@@ -271,7 +302,7 @@ const Dashboard = () => {
             .responsive-card .position-absolute .text-muted,
             .responsive-card .position-absolute .text-primary,
             .responsive-card .position-absolute .text-success,
-            .responsive-card .position-absolute .text-danger { font-size: 1.6rem; }
+            .responsive-card .position-absolute .text-danger { font: 1.6rem; }
             .responsive-card .position-absolute span { font-size: 2rem; }
             .card.p-3 { padding: 20px; }
           }
@@ -292,7 +323,17 @@ const Dashboard = () => {
               <div className="col-12">
                 <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
                   <div className="me-3">
-                    <AvatarIcon className="text-muted profile-avatar" />
+                    <div
+                      className="avatar-option profile-avatar"
+                      style={{
+                        color: avatarStyle.color,
+                        backgroundColor: avatarStyle.backgroundColor,
+                        borderColor: avatarStyle.borderColor,
+                        border: `1px solid ${avatarStyle.borderColor}`
+                      }}
+                    >
+                      <AvatarIcon className="avatar-icon" />
+                    </div>
                   </div>
                   <div className="flex-grow-1">
                     <h4 className="profile-name mb-1">{authUser?.name || 'User'}</h4>
