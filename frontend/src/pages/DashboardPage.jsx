@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
@@ -45,7 +45,12 @@ const getDailyQuote = () => {
   const storedDate = localStorage.getItem('quoteDate');
 
   if (storedQuote && storedDate === today) {
-    return JSON.parse(storedQuote);
+    try {
+      return JSON.parse(storedQuote);
+    } catch (e) {
+      console.error("Failed to parse stored quote:", e);
+      // Fallback to recalculating if stored quote is invalid
+    }
   }
 
   const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -58,22 +63,39 @@ const getDailyQuote = () => {
 };
 
 // Utility function to deeply sanitize data for serialization
+// Added more robust checking and logging
 const sanitizeReadingActivity = (activity) => {
+  console.log('Sanitizing reading activity...');
   if (!Array.isArray(activity)) {
-    console.error('Invalid activity data:', activity);
+    console.error('Invalid activity data: Input is not an array', activity);
     return [];
   }
-  
+
+  const sanitized = [];
   try {
-    return activity.map(entry => {
-      // Create a new plain object with only the properties we need
-      return {
-        date: typeof entry.date === 'string' ? entry.date : String(new Date().toISOString()),
-        pagesRead: typeof entry.pagesRead === 'number' ? entry.pagesRead : 0
-      };
-    });
+    for (const entry of activity) {
+      // Explicitly check if entry is a non-null object before processing
+      if (entry && typeof entry === 'object') {
+        const sanitizedEntry = {
+          date: typeof entry.date === 'string' ? entry.date : String(new Date().toISOString()),
+          pagesRead: typeof entry.pagesRead === 'number' ? entry.pagesRead : 0
+        };
+         // Add a check for unexpected properties, though map should prevent this
+        if (Object.keys(entry).length > 2 && (typeof entry.date === 'string' && typeof entry.pagesRead === 'number')) {
+             console.warn('Sanitizing entry with unexpected properties, only keeping date and pagesRead:', entry);
+        } else if (typeof entry.date !== 'string' || typeof entry.pagesRead !== 'number') {
+             console.warn('Sanitizing entry with unexpected data types:', entry);
+        }
+
+        sanitized.push(sanitizedEntry);
+      } else {
+        console.warn('Sanitize skipped invalid entry (not a valid object):', entry);
+      }
+    }
+    console.log('Sanitized reading activity array (length:', sanitized.length, '), first 5 entries:', JSON.stringify(sanitized.slice(0, 5)));
+    return sanitized;
   } catch (error) {
-    console.error('Error sanitizing reading activity:', error);
+    console.error('Error during reading activity sanitization:', error);
     return [];
   }
 };
@@ -82,23 +104,25 @@ const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [maxReadingStreak, setMaxReadingStreak] = useState(0);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [totalPagesRead, setTotalPagesRead] = useState(0);
-  const [totalBooksRead, setTotalBooksRead] = useState(0);
-  const [readingActivity, setReadingActivity] = useState([]);
+  // Use state derived from Redux cache initially
+  const cachedStats = useSelector((state) => state.books.stats);
+  const cachedActivity = useSelector((state) => state.books.readingActivity);
+
+  const [maxReadingStreak, setMaxReadingStreak] = useState(cachedStats?.maxReadingStreak || 0);
+  const [currentStreak, setCurrentStreak] = useState(cachedStats?.currentStreak || 0);
+  const [totalPagesRead, setTotalPagesRead] = useState(cachedStats?.totalPagesRead || 0);
+  const [totalBooksRead, setTotalBooksRead] = useState(cachedStats?.totalBooksRead || 0);
+  // Use cached activity data or default to empty array
+  const [readingActivity, setReadingActivity] = useState(Array.isArray(cachedActivity?.data) ? cachedActivity.data : []);
+
   const [dailyQuote, setDailyQuote] = useState(getDailyQuote());
   const [hasAvatarError, setHasAvatarError] = useState(false);
 
   const { isAuthenticated, user, books } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
     user: state.auth.user,
-    books: state.books,
+    books: state.books, // Get the whole books slice for lastFetched/progressUpdated checks
   }));
-
-  // Get cached data from Redux store
-  const cachedStats = useSelector((state) => state.books.stats);
-  const cachedActivity = useSelector((state) => state.books.readingActivity);
 
   // Production backend URL
   const API_URL = process.env.REACT_APP_API_URL || 'https://booksy-backend.up.railway.app';
@@ -109,124 +133,118 @@ const Dashboard = () => {
     if (avatarPath.startsWith('/uploads/')) {
       return `${API_URL}${avatarPath}`;
     }
-    // Handle legacy localhost URLs
+    // Handle legacy localhost URLs if necessary, although direct /uploads/ path is preferred
     if (avatarPath.includes('localhost')) {
-      const filename = avatarPath.split('/uploads/')[1];
-      return `${API_URL}/uploads/${filename}`;
+      try {
+        const filename = avatarPath.split('/uploads/')[1];
+        return `${API_URL}/uploads/${filename}`;
+      } catch (e) {
+        console.error("Failed to parse localhost avatar path:", avatarPath, e);
+        return null; // Return null if parsing fails
+      }
     }
-    return avatarPath;
+    return avatarPath; // Return as is if it's already a full URL
   };
 
   const fetchBooksAndStats = async () => {
     setLoading(true);
     try {
-      // Fetch books
+      // Fetch books - only if cache is old or progress updated
       const shouldFetchBooks = !books.lastFetched || (Date.now() - books.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchBooks) {
-        console.log('Fetching books from API...');
+        console.log('Dashboard: Fetching books from API...');
         const resBooks = await api.get('/books');
         const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
-        console.log('Books API response:', resBooks.data);
+        console.log('Dashboard: Books API response received.');
 
-        // Log the full structure of book arrays to check for non-serializable data
-        console.log('currentlyReading (full structure):', JSON.stringify(currentlyReading, null, 2));
-        console.log('wantToRead (full structure):', JSON.stringify(wantToRead, null, 2));
-        console.log('finishedReading (full structure):', JSON.stringify(finishedReading, null, 2));
+        // Note: Sanitization of book objects themselves is handled implicitly
+        // by ensuring the API returns serializable data or by separate logic
+        // if non-serializable data is expected. Assuming basic book data is serializable.
 
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
       } else {
-        console.log('Using cached books data...');
+        console.log('Dashboard: Using cached books data...');
       }
 
-      // Fetch user stats
+      // Fetch user stats - only if cache is old or progress updated
       const shouldFetchStats = !cachedStats.lastFetched || (Date.now() - cachedStats.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchStats) {
-        console.log('Fetching user stats from API...');
+        console.log('Dashboard: Fetching user stats from API...');
         const resStats = await api.get('/users/stats');
         const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
-        console.log('Stats API response:', resStats.data);
+        console.log('Dashboard: Stats API response received.');
 
         const statsPayload = {
           maxReadingStreak,
           currentStreak,
           totalPagesRead,
           totalBooksRead: completedBooks,
-          lastFetched: Date.now(),
         };
-        console.log('Dispatching setUserStats with payload:', statsPayload);
+        console.log('Dashboard: Dispatching setUserStats with payload:', statsPayload);
         dispatch(setUserStats(statsPayload));
 
-        // Update local state
+        // Update local state based on fetched stats
         setMaxReadingStreak(maxReadingStreak);
         setCurrentStreak(currentStreak);
         setTotalPagesRead(totalPagesRead);
         setTotalBooksRead(completedBooks);
       } else {
-        console.log('Using cached stats data...');
-        setMaxReadingStreak(cachedStats.maxReadingStreak || 0);
-        setCurrentStreak(cachedStats.currentStreak || 0);
-        setTotalPagesRead(cachedStats.totalPagesRead || 0);
-        setTotalBooksRead(cachedStats.totalBooksRead || 0);
+        console.log('Dashboard: Using cached stats data...');
+         // Update local state from cached stats if not fetching
+        setMaxReadingStreak(cachedStats?.maxReadingStreak || 0);
+        setCurrentStreak(cachedStats?.currentStreak || 0);
+        setTotalPagesRead(cachedStats?.totalPagesRead || 0);
+        setTotalBooksRead(cachedStats?.totalBooksRead || 0);
       }
 
-      // Fetch reading activity
+      // Fetch reading activity - only if cache is old or progress updated
       const shouldFetchActivity = !cachedActivity.lastFetched || (Date.now() - cachedActivity.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchActivity) {
-        console.log('Fetching reading activity from API...');
+        console.log('Dashboard: Fetching reading activity from API...');
         const resActivity = await api.get('/users/reading-activity');
-        const { readingActivity = [] } = resActivity.data;
-        console.log('Reading Activity API response:', resActivity.data);
+        const rawReadingActivity = resActivity.data?.readingActivity || []; // Handle potential missing property
+        console.log('Dashboard: Reading Activity API response received. Raw data type:', typeof rawReadingActivity, 'Is Array:', Array.isArray(rawReadingActivity));
 
-        // Extract the reading activity array from the response
-        let activityData = [];
-        
-        if (Array.isArray(readingActivity)) {
-          activityData = readingActivity;
-        } else if (resActivity.data && Array.isArray(resActivity.data.readingActivity)) {
-          activityData = resActivity.data.readingActivity;
-        }
-        
-        console.log('Raw activity data type:', typeof activityData);
-        console.log('Is array:', Array.isArray(activityData));
-        
-        if (activityData.length > 0) {
-          console.log('Sample readingActivity entries (first 3):', 
-            JSON.stringify(activityData.slice(0, 3), null, 2));
-        }
-        
-        // Create a completely new array with only the data we need
-        const sanitizedActivity = sanitizeReadingActivity(activityData);
-        console.log('Sanitized activity (first 3):', 
-          JSON.stringify(sanitizedActivity.slice(0, 3), null, 2));
-        
-        // Create a simple object with the data property
-        const activityPayload = { data: sanitizedActivity };
-        
-        // Dispatch the payload
-        console.log('Dispatching reading activity with payload structure:', 
-          Object.keys(activityPayload));
-        dispatch(setReadingActivity(activityPayload));
+        // Sanitize the fetched activity data
+        const sanitizedActivity = sanitizeReadingActivity(rawReadingActivity);
 
+        // Dispatch the sanitized data to Redux
+        console.log('Dashboard: Dispatching setReadingActivity with sanitized data...');
+        // The reducer expects { data: Array, lastFetched: Number }
+        dispatch(setReadingActivity({ data: sanitizedActivity }));
+
+        // Update local state with sanitized data
         setReadingActivity(sanitizedActivity);
+
       } else {
-        console.log('Using cached reading activity data...');
-        const cachedData = cachedActivity.data || [];
-        console.log('Cached reading activity data:', cachedData);
+        console.log('Dashboard: Using cached reading activity data...');
+        // Update local state from cached activity if not fetching
+        const cachedData = cachedActivity?.data || [];
         setReadingActivity(Array.isArray(cachedData) ? cachedData : []);
       }
+
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Dashboard: Error fetching data:', error);
       toast.error('Failed to load your data');
-      setReadingActivity([]);
+      // Set state to default/empty on error
+      setMaxReadingStreak(cachedStats?.maxReadingStreak || 0);
+      setCurrentStreak(cachedStats?.currentStreak || 0);
+      setTotalPagesRead(cachedStats?.totalPagesRead || 0);
+      setTotalBooksRead(cachedStats?.totalBooksRead || 0);
+      setReadingActivity(Array.isArray(cachedActivity?.data) ? cachedActivity.data : []);
     } finally {
       setLoading(false);
+      // Reset progress updated flag after fetch attempt
+      dispatch(setProgressUpdated(false));
     }
   };
 
+  // Clear search results on component mount
   useEffect(() => {
     dispatch(clearSearchResults());
   }, [dispatch]);
 
+  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -234,12 +252,14 @@ const Dashboard = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Fetch data on mount or when isAuthenticated/progressUpdated changes
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchBooksAndStats();
-    dispatch(setProgressUpdated(false));
-  }, [dispatch, isAuthenticated, books.progressUpdated]);
+    // progressUpdated is handled within fetchBooksAndStats finally block
+  }, [dispatch, isAuthenticated, books.progressUpdated]); // Depend on progressUpdated state
 
+  // Update daily quote if date changes
   useEffect(() => {
     const today = new Date().toDateString();
     if (localStorage.getItem('quoteDate') !== today) {
@@ -249,11 +269,22 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    // Clear book state on logout
     dispatch(setBooks({
       currentlyReading: [],
       wantToRead: [],
       finishedReading: []
     }));
+    // Clear stats state on logout (optional, depends on whether you want stats to persist across sessions)
+    dispatch(setUserStats({
+      maxReadingStreak: 0,
+      currentStreak: 0,
+      totalPagesRead: 0,
+      totalBooksRead: 0,
+    }));
+     // Clear activity state on logout (optional)
+    dispatch(setReadingActivity({ data: [] }));
+
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     navigate('/login');
@@ -261,18 +292,37 @@ const Dashboard = () => {
   };
 
   const handleRefresh = () => {
-    fetchBooksAndStats();
-    toast.info('Chart refreshed');
+    // Force refetch by setting progressUpdated to true temporarily
+    // This will trigger the useEffect dependency
+    dispatch(setProgressUpdated(true));
+    // fetchBooksAndStats is now triggered by the useEffect watching progressUpdated
+    toast.info('Refreshing data...');
   };
 
-  const chartData = React.useMemo(() => {
+  // Memoize chart data to avoid unnecessary recalculations
+  const chartData = useMemo(() => {
     const activityArray = Array.isArray(readingActivity) ? readingActivity : [];
+     // Ensure data points have valid date strings and page numbers before mapping
+    const validActivity = activityArray.filter(entry =>
+        entry && typeof entry === 'object' && typeof entry.date === 'string' && typeof entry.pagesRead === 'number'
+    );
+
+    // Sort activity by date to ensure chart displays chronologically
+    validActivity.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     return {
-      labels: activityArray.map((entry) => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+      labels: validActivity.map((entry) => {
+        try {
+           return new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        } catch (e) {
+            console.error("Error formatting date for chart:", entry.date, e);
+            return 'Invalid Date'; // Fallback for invalid dates
+        }
+      }),
       datasets: [
         {
           label: 'Pages Read',
-          data: activityArray.map((entry) => entry.pagesRead || 0),
+          data: validActivity.map((entry) => entry.pagesRead || 0),
           fill: false,
           backgroundColor: 'rgba(0, 184, 148, 0.6)',
           borderColor: 'rgb(0, 184, 148)',
@@ -280,9 +330,10 @@ const Dashboard = () => {
         },
       ],
     };
-  }, [readingActivity]);
+  }, [readingActivity]); // Regenerate only when readingActivity changes
 
-  const chartOptions = React.useMemo(() => ({
+   // Memoize chart options as they don't depend on dynamic data
+  const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     layout: {
@@ -329,6 +380,7 @@ const Dashboard = () => {
           font: {
             size: window.innerWidth < 576 ? 8 : 10,
           },
+          precision: 0 // Ensure integer ticks for page count
         },
       },
       x: {
@@ -342,32 +394,74 @@ const Dashboard = () => {
           font: {
             size: window.innerWidth < 576 ? 8 : 10,
           },
+          autoSkip: true, // Automatically skip labels if too many
+          maxTicksLimit: window.innerWidth < 576 ? 7 : 15 // Limit the number of ticks
         },
       },
     },
-  }), []);
+  }), []); // Empty dependency array means memoize once
 
   const joinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    : 'May 2025';
+    : 'May 2025'; // Fallback date
 
   return (
     <>
       <style>
         {`
+          /* Added basic styles based on the provided CSS strings for clarity */
+          .responsive-card {
+              height: 120px; /* Default height */
+              min-height: 100px; /* Minimum height */
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              text-align: center;
+          }
+          .responsive-card h6 {
+            font-size: 0.9rem;
+          }
+          .responsive-card p {
+            font-size: 1rem;
+          }
+           .responsive-card h5 {
+              font-size: 1.1rem;
+            }
+          .chart-container {
+              height: 350px; /* Default height */
+              width: 100%; /* Ensure chart takes full width */
+              position: relative; /* Needed for chart.js resize */
+          }
+           .profile-avatar {
+              width: 100px;
+              height: 100px;
+              object-fit: cover;
+          }
+           .profile-name {
+              font-size: 1.8rem;
+           }
+           .profile-info {
+              font-size: 1rem;
+           }
+
+
           @media (max-width: 576px) {
             .responsive-card {
               height: 100px !important;
               min-height: 100px !important;
+              padding: 10px !important; /* Adjusted padding */
             }
             .responsive-card h6 {
               font-size: 0.8rem !important;
             }
             .responsive-card p {
               font-size: 0.85rem !important;
+               margin-bottom: 0 !important; /* Reduce margin */
             }
             .responsive-card h5 {
               font-size: 1rem !important;
+               margin-top: 5px !important; /* Adjust margin */
             }
             .chart-container {
               height: 250px !important;
@@ -381,21 +475,42 @@ const Dashboard = () => {
             }
             .profile-info {
               font-size: 0.85rem !important;
+              margin-bottom: 2px !important; /* Adjust margin */
             }
+             .responsive-card .position-absolute { /* Adjust icon position on small screens */
+                 top: -15px !important;
+                 width: 30px !important;
+                 height: 30px !important;
+             }
+             .responsive-card .position-absolute .text-muted,
+             .responsive-card .position-absolute .text-primary,
+             .responsive-card .position-absolute .text-success,
+             .responsive-card .position-absolute .text-danger {
+                 font-size: 1.2rem !important; /* Adjust icon size */
+             }
+              .responsive-card .position-absolute span {
+                   font-size: 1.5rem !important; /* Adjust fire icon size */
+              }
+              .card.p-3 { /* Adjust profile card padding */
+                 padding: 10px !important;
+              }
           }
           @media (min-width: 576px) and (max-width: 768px) {
             .responsive-card {
               height: 110px !important;
               min-height: 110px !important;
+              padding: 15px !important; /* Adjusted padding */
             }
             .responsive-card h6 {
               font-size: 0.85rem !important;
             }
             .responsive-card p {
               font-size: 0.9rem !important;
+               margin-bottom: 2px !important; /* Reduce margin */
             }
             .responsive-card h5 {
               font-size: 1.05rem !important;
+               margin-top: 8px !important; /* Adjust margin */
             }
             .chart-container {
               height: 300px !important;
@@ -409,23 +524,48 @@ const Dashboard = () => {
             }
             .profile-info {
               font-size: 0.9rem !important;
+               margin-bottom: 3px !important; /* Adjust margin */
             }
+             .responsive-card .position-absolute { /* Adjust icon position on medium screens */
+                 top: -18px !important;
+                 width: 36px !important;
+                 height: 36px !important;
+             }
+              .responsive-card .position-absolute .text-muted,
+             .responsive-card .position-absolute .text-primary,
+             .responsive-card .position-absolute .text-success,
+             .responsive-card .position-absolute .text-danger {
+                 font-size: 1.4rem !important; /* Adjust icon size */
+             }
+              .responsive-card .position-absolute span {
+                   font-size: 1.8rem !important; /* Adjust fire icon size */
+              }
+             .card.p-3 { /* Adjust profile card padding */
+                 padding: 15px !important;
+              }
           }
-          @media (min-width: 769px) {
-            .chart-container {
-              height: 350px !important;
-            }
-            .profile-avatar {
-              width: 100px !important;
-              height: 100px !important;
-            }
-            .profile-name {
-              font-size: 1.8rem !important;
-            }
-            .profile-info {
-              font-size: 1rem !important;
-            }
-          }
+           @media (min-width: 769px) {
+             .responsive-card {
+               padding: 20px !important; /* Adjusted padding */
+             }
+              .responsive-card .position-absolute { /* Default icon position */
+                 top: -20px;
+                 width: 40px;
+                 height: 40px;
+             }
+             .responsive-card .position-absolute .text-muted,
+             .responsive-card .position-absolute .text-primary,
+             .responsive-card .position-absolute .text-success,
+             .responsive-card .position-absolute .text-danger {
+                 font-size: 1.6rem; /* Default icon size */
+             }
+              .responsive-card .position-absolute span {
+                   font-size: 2rem; /* Default fire icon size */
+              }
+              .card.p-3 { /* Default profile card padding */
+                 padding: 20px;
+              }
+           }
         `}
       </style>
       <Navbar user={user} onLogout={handleLogout} />
@@ -451,11 +591,13 @@ const Dashboard = () => {
                           src={formatAvatarUrl(user.avatar)}
                           alt="User Avatar"
                           className="rounded-circle profile-avatar"
-                          style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-                          onError={() => setHasAvatarError(true)}
+                          onError={() => {
+                             console.error("Failed to load avatar image:", formatAvatarUrl(user.avatar));
+                             setHasAvatarError(true);
+                           }}
                         />
                       ) : (
-                        <FaUserCircle className="text-muted profile-avatar" style={{ width: '100px', height: '100px' }} />
+                        <FaUserCircle className="text-muted profile-avatar" />
                       )}
                     </div>
                     <div className="flex-grow-1">
@@ -472,72 +614,82 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Streak and Quote Section */}
               <div className="row mt-1 mt-md-5">
                 <div className="col-12 col-sm-6 text-center mb-3 mb-sm-0">
-                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ height: '120px' }}>
-                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-20px', zIndex: 10 }}>
-                      <span style={{ fontSize: '2rem' }}>🔥</span>
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
+                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
+                      <span>🔥</span>
                     </div>
-                    <h6 className="text-muted mb-1 text-center pt-3" style={{ fontSize: '0.9rem' }}>Current Streak</h6>
-                    <h5 className="text-muted text-center pt-1" style={{ fontSize: '1.1rem' }}>
+                    <h6 className="text-muted mb-1 text-center pt-3">Current Streak</h6>
+                    <h5 className="text-muted text-center pt-1">
                       {currentStreak} {currentStreak === 1 ? 'day' : 'days'}
                     </h5>
                   </div>
                 </div>
                 <div className="col-12 col-sm-6 text-center">
-                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ height: '120px' }}>
-                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-18px', zIndex: 10 }}>
-                      <FaQuoteLeft className="text-muted" style={{ fontSize: '1.6rem' }} />
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
+                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
+                      <FaQuoteLeft className="text-muted" />
                     </div>
-                    <p className="text-muted mb-1 text-center pt-3" style={{ fontSize: '1rem', fontStyle: 'italic' }}>
+                    <p className="text-muted mb-1 text-center pt-3" style={{ fontStyle: 'italic' }}>
                       "{dailyQuote.text}"
                     </p>
-                    <p className="text-muted text-center" style={{ fontSize: '0.9rem' }}>
+                    <p className="text-muted text-center">
                       — {dailyQuote.author}, <em>{dailyQuote.book}</em>
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* Reading Activity Chart */}
               <div className="row mt-3 mt-md-5 mb-4 mb-md-4">
                 <div className="col-12">
-                  <div className="card p-2 p-md-3 shadow-sm chart-container" style={{ height: '350px' }}>
+                  <div className="card p-2 p-md-3 shadow-sm chart-container">
                     <div className="d-flex justify-content-end mb-2">
-                      <button className="btn btn-outline-primary btn-sm" onClick={handleRefresh}>
-                        Refresh Chart
+                      <button className="btn btn-outline-primary btn-sm" onClick={handleRefresh} disabled={loading}>
+                        {loading ? 'Refreshing...' : 'Refresh Chart'}
                       </button>
                     </div>
-                    <Line data={chartData} options={chartOptions} />
+                    {/* Render chart only if data is available and not loading */}
+                    {!loading && chartData.labels.length > 0 ? (
+                       <Line data={chartData} options={chartOptions} />
+                    ) : (
+                        <div className="d-flex align-items-center justify-content-center h-100">
+                           <p className="text-muted">{loading ? 'Loading chart data...' : 'No reading activity data available for the last 30 days.'}</p>
+                        </div>
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* Summary Stats Section */}
               <div className="row mt-1 mt-md-5">
                 <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
-                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ minHeight: '100px' }}>
-                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-18px', zIndex: 10 }}>
-                      <FaBook className="text-primary" style={{ fontSize: '1.6rem' }} />
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
+                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
+                      <FaBook className="text-primary" />
                     </div>
-                    <h6 className="text-muted mb-1 text-center pt-3" style={{ fontSize: '0.9rem' }}>Total Books Read</h6>
-                    <h5 className="text-muted text-center pt-1" style={{ fontSize: '1.1rem' }}>{totalBooksRead}</h5>
+                    <h6 className="text-muted mb-1 text-center pt-3">Total Books Read</h6>
+                    <h5 className="text-muted text-center pt-1">{totalBooksRead}</h5>
                   </div>
                 </div>
                 <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
-                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ minHeight: '100px' }}>
-                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-18px', zIndex: 10 }}>
-                      <FaFileAlt className="text-success" style={{ fontSize: '1.6rem' }} />
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
+                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
+                      <FaFileAlt className="text-success" />
                     </div>
-                    <h6 className="text-muted mb-1 text-center pt-3" style={{ fontSize: '0.9rem' }}>Total Pages Read</h6>
-                    <h5 className="text-muted text-center pt-1" style={{ fontSize: '1.1rem' }}>{totalPagesRead}</h5>
+                    <h6 className="text-muted mb-1 text-center pt-3">Total Pages Read</h6>
+                    <h5 className="text-muted text-center pt-1">{totalPagesRead}</h5>
                   </div>
                 </div>
                 <div className="col-12 col-sm-4 text-center">
-                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card" style={{ minHeight: '100px' }}>
-                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px', top: '-18px', zIndex: 10 }}>
-                      <FaFire className="text-danger" style={{ fontSize: '1.6rem' }} />
+                  <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
+                    <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
+                      <FaFire className="text-danger" />
                     </div>
-                    <h6 className="text-muted mb-1 text-center pt-3" style={{ fontSize: '0.9rem' }}>Longest Streak</h6>
-                    <h5 className="text-muted text-center pt-1" style={{ fontSize: '1.1rem' }}>
+                    <h6 className="text-muted mb-1 text-center pt-3">Longest Streak</h6>
+                    <h5 className="text-muted text-center pt-1">
                       {maxReadingStreak} {maxReadingStreak === 1 ? 'day' : 'days'}
                     </h5>
                   </div>
