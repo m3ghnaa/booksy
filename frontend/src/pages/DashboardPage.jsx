@@ -274,29 +274,24 @@ const Dashboard = () => {
           <>
             {/* Profile Info Section */}
             <div className="row mb-4">
-              <div className="col-12">
-                <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
-                  <div className="me-3">
-                    {user?.avatar && !hasAvatarError ? (
-                      <img
-                        src={formatAvatarUrl(user.avatar)}
-                        alt="User Avatar"
-                        className="rounded-circle profile-avatar"
-                        onError={() => setHasAvatarError(true)}
-                      />
-                    ) : (
-                      <FaUserCircle className="text-muted profile-avatar" />
-                    )}
-                  </div>
-                  <div className="flex-grow-1">
-                    <h4 className="profile-name mb-1">{user?.name || 'User'}</h4>
-                    <p className="text-muted profile-info mb-1">Member since {joinDate}</p>
-                    <p className="text-muted profile-info mb-1">Favorite Genre: {user?.favoriteGenre || 'Not set'}</p>
-                    <p className="text-muted profile-info mb-0">Reading Goal: {user?.readingGoal || 'Not set'} books this year</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+  <div className="col-12">
+    <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
+      <div className="me-3">
+        <FaUserCircle className="text-muted profile-avatar" />
+      </div>
+      <div className="flex-grow-1">
+        <h4 className="profile-name mb-1">{user?.name || 'User'}</h4>
+        <p className="text-muted profile-info mb-1">Member since {joinDate}</p>
+        <p className="text-muted profile-info mb-1">
+          Favorite Genre: {user?.favoriteGenre !== undefined && user?.favoriteGenre !== '' ? user.favoriteGenre : 'Not set'}
+        </p>
+        <p className="text-muted profile-info mb-0">
+          Reading Goal: {user?.readingGoal !== undefined && user.readingGoal > 0 ? `${user.readingGoal} books this year` : 'Not set'}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
             {/* Streak and Quote Section */}
             <div className="row mt-1 mt-md-5">
