@@ -7,7 +7,6 @@ import { setUserProfile } from '../redux/userSlice';
 import Navbar from '../components/Navbar';
 import { setBooks } from '../redux/bookSlice';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle } from 'react-icons/fa';
 
 const SettingsPage = () => {
   const dispatch = useDispatch();
@@ -16,31 +15,19 @@ const SettingsPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    avatar: null,
     favoriteGenre: '',
     readingGoal: ''
   });
+  const [avatar, setAvatar] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [hasError, setHasError] = useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
 
   const getApiBaseUrl = () => {
     return process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com/api';
-  };
-
-  const formatAvatarUrl = (avatarPath) => {
-    if (!avatarPath) return null;
-    if (avatarPath.startsWith('http')) {
-      return avatarPath.replace('http:', 'https:');
-    }
-    if (avatarPath.startsWith('/uploads/')) {
-      const baseUrl = getApiBaseUrl();
-      return `${baseUrl}${avatarPath}?t=${Date.now()}`;
-    }
-    return avatarPath;
   };
 
   useEffect(() => {
@@ -68,16 +55,10 @@ const SettingsPage = () => {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        avatar: null,
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal ? user.readingGoal.toString() : ''
       });
-      if (user.avatar) {
-        setPreview(formatAvatarUrl(user.avatar));
-      } else {
-        setPreview(null);
-      }
-      setHasError(false);
+      setPreview(user.avatar || null);
     }
   }, [user]);
 
@@ -89,16 +70,18 @@ const SettingsPage = () => {
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Valid email is required';
     }
-    if (formData.readingGoal && (isNaN(formData.readingGoal) || parseInt(formData.readingGoal) < 0)) {
-      newErrors.readingGoal = 'Reading goal must be a non-negative number';
-    }
-    if (formData.avatar) {
-      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-      if (!allowedTypes.includes(formData.avatar.type)) {
-        newErrors.avatar = 'Avatar must be a PNG, JPG, or JPEG file';
+    if (formData.readingGoal !== '') {
+      const parsedGoal = parseInt(formData.readingGoal);
+      if (isNaN(parsedGoal) || parsedGoal < 0) {
+        newErrors.readingGoal = 'Reading goal must be a non-negative number';
       }
-      if (formData.avatar.size > 5 * 1024 * 1024) {
-        newErrors.avatar = 'Avatar file size must be less than 5MB';
+    }
+    if (avatar) {
+      if (!avatar.type.startsWith('image/')) {
+        newErrors.avatar = 'Only image files are allowed';
+      }
+      if (avatar.size > 5 * 1024 * 1024) { // 5MB limit
+        newErrors.avatar = 'Image size must be less than 5MB';
       }
     }
     setErrors(newErrors);
@@ -121,56 +104,33 @@ const SettingsPage = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setFormData((prev) => ({
-      ...prev,
-      avatar: file || null
-    }));
     if (file) {
+      setAvatar(file);
+      setIsRemovingAvatar(false);
+      setHasError(false);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result);
-        setHasError(false);
+      };
+      reader.onerror = () => {
+        setHasError(true);
+        setPreview(null);
+        setAvatar(null);
+        toast.error('Failed to read the image file');
       };
       reader.readAsDataURL(file);
     } else {
-      setPreview(user?.avatar ? formatAvatarUrl(user.avatar) : null);
+      setAvatar(null);
+      setPreview(null);
       setHasError(false);
-    }
-    if (errors.avatar) {
-      setErrors((prev) => ({
-        ...prev,
-        avatar: ''
-      }));
     }
   };
 
-  const handleRemoveAvatar = async () => {
-    if (!isAuthenticated) {
-      toast.error('Please log in to remove avatar');
-      return;
-    }
+  const handleRemoveAvatar = () => {
+    setAvatar(null);
+    setPreview(null);
+    setHasError(false);
     setIsRemovingAvatar(true);
-    try {
-      const response = await api.delete('/users/avatar');
-      const updatedUser = {
-        ...user,
-        avatar: null
-      };
-      dispatch(updateUser(updatedUser));
-      dispatch(setUserProfile(updatedUser));
-      setFormData((prev) => ({
-        ...prev,
-        avatar: null
-      }));
-      setPreview(null);
-      setHasError(false);
-      toast.success('Avatar removed successfully');
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to remove avatar';
-      toast.error(errorMessage);
-    } finally {
-      setIsRemovingAvatar(false);
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -189,36 +149,21 @@ const SettingsPage = () => {
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
       formDataToSend.append('favoriteGenre', formData.favoriteGenre);
-      formDataToSend.append('readingGoal', formData.readingGoal);
-      if (formData.avatar) {
-        formDataToSend.append('avatar', formData.avatar);
+      if (formData.readingGoal !== '') {
+        formDataToSend.append('readingGoal', parseInt(formData.readingGoal));
+      }
+      if (avatar) {
+        formDataToSend.append('avatar', avatar);
       }
 
-      const response = await api.put('/users/settings', formDataToSend); 
-
-      let updatedAvatar = response.data.user.avatar;
-      if (response.data.avatarFilename) {
-        updatedAvatar = formatAvatarUrl(`/uploads/${response.data.avatarFilename}`);
-      } else if (updatedAvatar) {
-        updatedAvatar = formatAvatarUrl(updatedAvatar);
-      }
-      const updatedUser = {
-        ...response.data.user,
-        avatar: updatedAvatar
-      };
+      const response = await api.put('/users/settings', formDataToSend);
+      const updatedUser = response.data.user;
       dispatch(updateUser(updatedUser));
       dispatch(setUserProfile(updatedUser));
+      setPreview(updatedUser.avatar || null); // Update preview with new avatar URL
+      setIsRemovingAvatar(false); // Reset remove flag
       const refreshResponse = await api.get('/auth/me');
-      const refreshedUser = {
-        ...refreshResponse.data.user,
-        avatar: formatAvatarUrl(refreshResponse.data.user.avatar)
-      };
-      dispatch(updateUser(refreshedUser));
-      setPreview(updatedUser.avatar);
-      setFormData((prev) => ({
-        ...prev,
-        avatar: null
-      }));
+      dispatch(updateUser(refreshResponse.data.user));
       toast.success('Profile updated successfully');
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to update profile';
@@ -252,6 +197,49 @@ const SettingsPage = () => {
       <div className="container mt-5 pt-5">
         <h2 className="mb-4">Settings</h2>
         <form onSubmit={handleSubmit} className="card p-4 shadow-sm" style={{ maxWidth: '500px' }}>
+          <div className="mb-3">
+            <label htmlFor="avatar" className="form-label">Profile Picture</label>
+            <div className="d-flex align-items-center mb-2">
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="Avatar Preview"
+                  className="rounded-circle me-3"
+                  style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                />
+              ) : (
+                <div
+                  className="rounded-circle bg-secondary me-3 d-flex align-items-center justify-content-center"
+                  style={{ width: '50px', height: '50px' }}
+                >
+                  <span className="text-white">No Image</span>
+                </div>
+              )}
+              <div>
+                <input
+                  type="file"
+                  id="avatar"
+                  name="avatar"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className={`form-control ${errors.avatar ? 'is-invalid' : ''}`}
+                  disabled={isSubmitting}
+                />
+                {preview && (
+                  <button
+                    type="button"
+                    className="btn btn-link text-danger p-0 mt-1"
+                    onClick={handleRemoveAvatar}
+                    disabled={isSubmitting}
+                  >
+                    Remove Image
+                  </button>
+                )}
+              </div>
+            </div>
+            {errors.avatar && <div className="invalid-feedback d-block">{errors.avatar}</div>}
+            {hasError && <div className="text-danger">Error loading image</div>}
+          </div>
           <div className="mb-3">
             <label htmlFor="name" className="form-label">Name</label>
             <input
@@ -307,58 +295,6 @@ const SettingsPage = () => {
             />
             {errors.readingGoal && <div className="invalid-feedback">{errors.readingGoal}</div>}
           </div>
-          <div className="mb-3">
-            <label htmlFor="avatar" className="form-label">Avatar (PNG, JPG, JPEG, max 5MB)</label>
-            <input
-              type="file"
-              id="avatar"
-              name="avatar"
-              accept="image/png,image/jpeg,image/jpg"
-              onChange={handleFileChange}
-              className={`form-control ${errors.avatar ? 'is-invalid' : ''}`}
-              disabled={isSubmitting}
-            />
-            {errors.avatar && <div className="invalid-feedback">{errors.avatar}</div>}
-          </div>
-          {preview ? (
-            <div className="mb-3">
-              <label className="form-label">Avatar Preview</label>
-              <div>
-                <img
-                  src={preview}
-                  alt="Avatar Preview"
-                  className="img-fluid rounded"
-                  style={{ maxWidth: '100px', maxHeight: '100px' }}
-                  onError={() => {
-                    console.error('Failed to load avatar image');
-                    setHasError(true);
-                    setPreview(null);
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="mb-3">
-              <label className="form-label">Avatar Preview</label>
-              <FaUserCircle
-                className="rounded text-muted"
-                size={100}
-                style={{ display: 'block', margin: 'auto' }}
-              />
-            </div>
-          )}
-          {preview && (
-            <div className="mb-3">
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={handleRemoveAvatar}
-                disabled={isRemovingAvatar || isSubmitting}
-              >
-                {isRemovingAvatar ? 'Removing...' : 'Remove Avatar'}
-              </button>
-            </div>
-          )}
           <button
             type="submit"
             className="btn btn-primary"
