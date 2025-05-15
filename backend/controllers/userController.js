@@ -162,7 +162,12 @@ const getUserStats = async (req, res) => {
  * Update user settings
  */
 
+
+/**
+ * Update user settings
+ */
 const updateUserSettings = async (req, res) => {
+  console.log('Starting updateUserSettings...');
   upload(req, res, async (err) => {
     if (err) {
       console.error('Multer upload error:', err);
@@ -170,23 +175,32 @@ const updateUserSettings = async (req, res) => {
     }
 
     try {
+      console.log('Multer processing complete. Request body:', req.body);
+      console.log('Uploaded file:', req.file);
+
       const userId = req.user.id;
       const { name, email, favoriteGenre, readingGoal } = req.body;
 
       // Validate inputs
+      console.log('Validating inputs...');
       if (!name || name.trim() === '') {
+        console.log('Validation failed: Name is required');
         return res.status(400).json({ message: 'Name is required' });
       }
       if (!email || !validator.isEmail(email)) {
+        console.log('Validation failed: Invalid email');
         return res.status(400).json({ message: 'Valid email is required' });
       }
       if (readingGoal !== undefined && (isNaN(readingGoal) || parseInt(readingGoal) < 0)) {
+        console.log('Validation failed: Invalid reading goal');
         return res.status(400).json({ message: 'Reading goal must be a non-negative number' });
       }
 
       // Check if email is taken by another user
+      console.log('Checking for existing email...');
       const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: userId } });
       if (existingUser) {
+        console.log('Email already in use:', email);
         return res.status(409).json({ message: 'Email is already in use' });
       }
 
@@ -195,66 +209,72 @@ const updateUserSettings = async (req, res) => {
         name: name.trim(),
         email: email.toLowerCase(),
       };
-
       if (favoriteGenre !== undefined) {
         updateData.favoriteGenre = favoriteGenre.trim();
       }
       if (readingGoal !== undefined) {
         updateData.readingGoal = parseInt(readingGoal);
       }
+      console.log('Update data prepared:', updateData);
 
       // Handle avatar upload
       if (req.file) {
+        console.log('Processing avatar upload...');
         try {
           // Ensure uploads directory exists
           const uploadsDir = path.join(__dirname, '../public/uploads');
+          console.log('Creating uploads directory if not exists:', uploadsDir);
           fs.mkdirSync(uploadsDir, { recursive: true });
-          
+
           // Get current user
+          console.log('Fetching current user:', userId);
           const user = await User.findById(userId);
-          
+          if (!user) {
+            console.log('User not found:', userId);
+            return res.status(404).json({ message: 'User not found' });
+          }
+
           // Remove old avatar if it exists
           if (user.avatar && user.avatar.includes('/uploads/')) {
             try {
-              // Extract filename from avatar URL
               const oldAvatarFilename = user.avatar.split('/').pop().split('?')[0];
               const oldAvatarPath = path.join(__dirname, '../public/uploads', oldAvatarFilename);
-              
+              console.log('Attempting to delete old avatar:', oldAvatarPath);
               if (fs.existsSync(oldAvatarPath)) {
                 fs.unlinkSync(oldAvatarPath);
                 console.log(`Deleted old avatar: ${oldAvatarPath}`);
+              } else {
+                console.log('Old avatar file not found:', oldAvatarPath);
               }
             } catch (err) {
               console.error('Error deleting old avatar:', err);
               // Continue even if old avatar deletion fails
             }
           }
-          
-          // Set new avatar path (always use relative URL)
+
+          // Set new avatar path
           const avatarFilename = req.file.filename;
           const filePath = path.join(uploadsDir, req.file.filename);
-          
-          // Verify the file was saved
+          console.log('Verifying new avatar file exists:', filePath);
           if (!fs.existsSync(filePath)) {
             console.error(`Avatar file not found at ${filePath}`);
             return res.status(500).json({ message: 'Failed to save avatar' });
           }
-          
-          // Always store relative URL in the database
+
           const avatarUrl = `/uploads/${req.file.filename}`;
-          
           updateData.avatar = avatarUrl;
           console.log(`New avatar set: ${updateData.avatar}`);
         } catch (avatarError) {
           console.error('Avatar processing error:', avatarError);
-          return res.status(500).json({ 
-            message: 'Error processing avatar upload', 
-            error: process.env.NODE_ENV === 'development' ? avatarError.message : undefined 
+          return res.status(500).json({
+            message: 'Error processing avatar upload',
+            error: process.env.NODE_ENV === 'development' ? avatarError.message : undefined
           });
         }
       }
 
       // Update user
+      console.log('Updating user in database...');
       const updatedUser = await User.findByIdAndUpdate(
         userId,
         { $set: updateData },
@@ -262,9 +282,11 @@ const updateUserSettings = async (req, res) => {
       ).select('-password');
 
       if (!updatedUser) {
+        console.log('User not found during update:', userId);
         return res.status(404).json({ message: 'User not found' });
       }
 
+      console.log('User updated successfully:', updatedUser);
       res.status(200).json({
         success: true,
         message: 'Profile updated successfully',
@@ -276,7 +298,6 @@ const updateUserSettings = async (req, res) => {
           favoriteGenre: updatedUser.favoriteGenre,
           readingGoal: updatedUser.readingGoal,
         },
-        // Send the filename separately for the frontend
         avatarFilename: req.file ? req.file.filename : null,
       });
     } catch (error) {
