@@ -5,7 +5,7 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { clearSearchResults } from '../redux/searchSlice';
 import { setBooks, setProgressUpdated, setUserStats } from '../redux/bookSlice';
-import { logout, updateUser } from '../redux/authSlice';
+import { logout, syncUserWithUserSlice } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/Navbar';
@@ -65,9 +65,10 @@ const Dashboard = () => {
   const [readingActivity, setReadingActivity] = useState([]);
   const [dailyQuote, setDailyQuote] = useState(getDailyQuote());
 
-  const { isAuthenticated, user, books, stats } = useSelector((state) => ({
+  const { isAuthenticated, authUser, userProfile, books, stats } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
-    user: state.auth.user,
+    authUser: state.auth.user,
+    userProfile: state.user.profile,
     books: state.books,
     stats: state.books.stats,
   }));
@@ -77,16 +78,15 @@ const Dashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch user data
-      const shouldFetchUser = !user || books.progressUpdated;
-      if (shouldFetchUser) {
-        const resUser = await api.get('/users/me');
-        console.log('User data fetched from /api/users/me:', resUser.data);
-        if (resUser.data.success && resUser.data.user) {
-          dispatch(updateUser(resUser.data.user));
-        } else {
-          throw new Error('Invalid user data response');
-        }
+      // Always fetch user data on page load to ensure latest data
+      const resUser = await api.get('/users/me');
+      console.log('User data fetched from /api/users/me:', resUser.data);
+      if (resUser.data.success && resUser.data.user) {
+        // Use syncUserWithUserSlice to update both authSlice and userSlice
+        dispatch(syncUserWithUserSlice(resUser.data.user));
+        console.log('Dispatched syncUserWithUserSlice with:', resUser.data.user);
+      } else {
+        throw new Error('Invalid user data response');
       }
 
       const shouldFetchBooks = !books.lastFetched || (Date.now() - books.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
@@ -142,14 +142,14 @@ const Dashboard = () => {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser()); // Use the logoutUser thunk
     dispatch(setBooks({ currentlyReading: [], wantToRead: [], finishedReading: [] }));
     dispatch(setUserStats({ maxReadingStreak: 0, currentStreak: 0, totalPagesRead: 0, totalBooksRead: 0 }));
     setReadingActivity([]);
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     navigate('/login');
-    toast.info('You have logged out.');
+    // toast.info is handled in logoutUser thunk
   };
 
   const handleRefresh = () => {
@@ -198,8 +198,8 @@ const Dashboard = () => {
     },
   }), []);
 
-  const joinDate = user?.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const joinDate = authUser?.createdAt
+    ? new Date(authUser.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : 'May 2025';
 
   return (
@@ -269,7 +269,7 @@ const Dashboard = () => {
           }
         `}
       </style>
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar user={authUser} onLogout={handleLogout} />
       <div className="container d-flex flex-column min-vh-100 mt-5 pt-5">
         {loading ? (
           <div className="col-12 text-center my-5">
@@ -287,13 +287,13 @@ const Dashboard = () => {
                     <FaUserCircle className="text-muted profile-avatar" />
                   </div>
                   <div className="flex-grow-1">
-                    <h4 className="profile-name mb-1">{user?.name || 'User'}</h4>
+                    <h4 className="profile-name mb-1">{authUser?.name || 'User'}</h4>
                     <p className="text-muted profile-info mb-1">Member since {joinDate}</p>
                     <p className="text-muted profile-info mb-1">
-                      Favorite Genre: {user?.favoriteGenre !== undefined && user?.favoriteGenre !== '' ? user.favoriteGenre : 'Not set'}
+                      Favorite Genre: {userProfile?.favoriteGenre !== undefined && userProfile?.favoriteGenre !== '' ? userProfile.favoriteGenre : 'Not set'}
                     </p>
                     <p className="text-muted profile-info mb-0">
-                      Reading Goal: {user?.readingGoal !== undefined && user.readingGoal > 0 ? `${user.readingGoal} books this year` : 'Not set'}
+                      Reading Goal: {userProfile?.readingGoal !== undefined && userProfile.readingGoal > 0 ? `${userProfile.readingGoal} books this year` : 'Not set'}
                     </p>
                   </div>
                 </div>
