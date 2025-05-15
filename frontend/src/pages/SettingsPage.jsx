@@ -80,7 +80,7 @@ const SettingsPage = () => {
       if (!avatar.type.startsWith('image/')) {
         newErrors.avatar = 'Only image files are allowed';
       }
-      if (avatar.size > 5 * 1024 * 1024) { // 5MB limit
+      if (avatar.size > 5 * 1024 * 1024) {
         newErrors.avatar = 'Image size must be less than 5MB';
       }
     }
@@ -104,15 +104,18 @@ const SettingsPage = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    console.log('Selected file:', file);
     if (file) {
       setAvatar(file);
       setIsRemovingAvatar(false);
       setHasError(false);
       const reader = new FileReader();
       reader.onloadend = () => {
+        console.log('FileReader preview generated:', reader.result);
         setPreview(reader.result);
       };
       reader.onerror = () => {
+        console.error('FileReader error occurred');
         setHasError(true);
         setPreview(null);
         setAvatar(null);
@@ -123,18 +126,32 @@ const SettingsPage = () => {
       setAvatar(null);
       setPreview(null);
       setHasError(false);
+      console.log('No file selected, clearing avatar and preview');
     }
   };
 
-  const handleRemoveAvatar = () => {
+  const handleRemoveAvatar = async () => {
+    console.log('Removing avatar');
     setAvatar(null);
     setPreview(null);
     setHasError(false);
     setIsRemovingAvatar(true);
+    try {
+      await api.delete('/users/avatar');
+      console.log('Avatar deleted on server');
+      const updatedUser = { ...user, avatar: null };
+      dispatch(updateUser(updatedUser));
+      dispatch(setUserProfile(updatedUser));
+      toast.success('Avatar removed successfully');
+    } catch (error) {
+      console.error('Failed to delete avatar on server:', error);
+      toast.error('Failed to remove avatar');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('handleSubmit called at:', new Date().toISOString()); // Test log
     if (!isAuthenticated) {
       toast.error('Please log in to update settings');
       return;
@@ -153,20 +170,34 @@ const SettingsPage = () => {
         formDataToSend.append('readingGoal', parseInt(formData.readingGoal));
       }
       if (avatar) {
+        console.log('Appending avatar to FormData:', avatar);
         formDataToSend.append('avatar', avatar);
+        formDataToSend.append('avatarExpected', 'true');
+      } else {
+        console.log('No avatar to append to FormData');
+        if (isRemovingAvatar) {
+          formDataToSend.append('avatar', '');
+        }
+      }
+
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`FormData entry: ${key}=${value}`);
       }
 
       const response = await api.put('/users/settings', formDataToSend);
+      console.log('Update response:', response.data);
       const updatedUser = response.data.user;
       dispatch(updateUser(updatedUser));
       dispatch(setUserProfile(updatedUser));
-      setPreview(updatedUser.avatar || null); // Update preview with new avatar URL
-      setIsRemovingAvatar(false); // Reset remove flag
+      setPreview(updatedUser.avatar || null);
+      setIsRemovingAvatar(false);
       const refreshResponse = await api.get('/auth/me');
+      console.log('Refresh response (/auth/me):', refreshResponse.data);
       dispatch(updateUser(refreshResponse.data.user));
       toast.success('Profile updated successfully');
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to update profile';
+      console.error('Update error:', error);
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
