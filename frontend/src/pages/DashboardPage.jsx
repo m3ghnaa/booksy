@@ -5,7 +5,7 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { clearSearchResults } from '../redux/searchSlice';
 import { setBooks, setProgressUpdated, setUserStats } from '../redux/bookSlice';
-import { logoutUser } from '../redux/authSlice';
+import { logoutUser, syncUserWithUserSlice } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/Navbar';
