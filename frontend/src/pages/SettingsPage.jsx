@@ -194,7 +194,7 @@ const SettingsPage = () => {
         formDataToSend.append('avatar', formData.avatar);
       }
 
-      const response = await api.put('/users/settings', formDataToSend); // Removed manual Content-Type header
+      const response = await api.put('/users/settings', formDataToSend); 
 
       let updatedAvatar = response.data.user.avatar;
       if (response.data.avatarFilename) {
