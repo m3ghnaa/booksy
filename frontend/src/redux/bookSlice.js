@@ -153,28 +153,54 @@ const bookSlice = createSlice({
         if (action.payload && typeof action.payload === 'object' && Array.isArray(action.payload.data)) {
             const incomingActivityData = action.payload.data;
 
-            // Optional: Add an extra layer of runtime check for serializability just before assigning
-            const isDataSerializable = incomingActivityData.every(item =>
+            // --- Diagnostic Deep Clone to force serializability ---
+            // This attempts to create a new object containing only JSON serializable data.
+            // If the error disappears, the issue was likely a non-serializable value
+            // that JSON.parse(JSON.stringify) removed or converted.
+            let deeplyClonedData;
+            try {
+                 deeplyClonedData = JSON.parse(JSON.stringify(incomingActivityData));
+                 console.log('setReadingActivity: Successfully attempted deep clone of incoming data.');
+                 // Optional: Add a check here to see if the cloning *changed* the data significantly,
+                 // which might indicate non-serializable parts were present.
+                //  if (JSON.stringify(deeplyClonedData) !== JSON.stringify(incomingActivityData)) {
+                //      console.warn("setReadingActivity: Deep clone altered data, non-serializable items might have been present.");
+                //  }
+
+            } catch (cloneError) {
+                 console.error('setReadingActivity: Error during diagnostic deep cloning with JSON.parse(JSON.stringify):', cloneError, incomingActivityData);
+                 // If cloning fails (e.g., contains circular references or unsupported types),
+                 // fall back to the original data and log the issue. The error might still occur.
+                 deeplyClonedData = incomingActivityData;
+            }
+            // --- End Diagnostic Deep Clone ---
+
+            // Add a runtime check for the expected structure *after* cloning
+            const isDataSerializableShape = Array.isArray(deeplyClonedData) && deeplyClonedData.every(item =>
                 item && typeof item === 'object' && typeof item.date === 'string' &&
                 typeof item.pagesRead === 'number' && Object.keys(item).length === 2
             );
 
-            if (isDataSerializable) {
+            if (isDataSerializableShape) {
                 state.readingActivity = {
-                    data: incomingActivityData,
+                    data: deeplyClonedData, // Assign the potentially cloned data
                     lastFetched: Date.now() // Update activity cache timestamp
                 };
-                 console.log('setReadingActivity: State updated with serializable data.');
+                 console.log('setReadingActivity: State updated with data matching serializable shape.');
             } else {
-                console.error('setReadingActivity: Received non-serializable data structure, not updating state.', incomingActivityData);
+                console.error('setReadingActivity: Data does not match expected serializable shape after cloning attempt, not updating state.', deeplyClonedData);
                 // Optionally, set to empty or previous valid state on error
-                // state.readingActivity = { data: [], lastFetched: Date.now() };
+                 if (!state.readingActivity || !Array.isArray(state.readingActivity.data)) {
+                     state.readingActivity = { data: [], lastFetched: Date.now() };
+                 }
             }
 
         } else {
             console.warn('setReadingActivity: Invalid payload format received. Expected { data: Array }.', action.payload);
              // Optionally, set to empty state if payload format is wrong
-             // state.readingActivity = { data: [], lastFetched: Date.now() };
+             if (!state.readingActivity || !Array.isArray(state.readingActivity.data)) {
+                 state.readingActivity = { data: [], lastFetched: Date.now() };
+             }
         }
       } catch (error) {
         console.error('Error in setReadingActivity reducer:', error);

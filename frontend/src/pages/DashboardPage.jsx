@@ -125,7 +125,7 @@ const Dashboard = () => {
   }));
 
   // Production backend URL
-  const API_URL = process.env.REACT_APP_API_URL || 'https://booksy-backend.up.railway.app';
+  const API_URL = process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com';
 
   // Construct full avatar URL
   const formatAvatarUrl = (avatarPath) => {
