@@ -57,12 +57,19 @@ const getDailyQuote = () => {
   return selectedQuote;
 };
 
-// Utility function to sanitize data for serialization
+// Utility function to deeply sanitize data for serialization
 const sanitizeReadingActivity = (activity) => {
-  return activity.map(entry => ({
-    date: entry.date instanceof Date ? entry.date.toISOString() : String(entry.date),
-    pagesRead: Number(entry.pagesRead) || 0,
-  }));
+  return activity.map(entry => {
+    const sanitizedEntry = {};
+    // Only keep expected fields and ensure they are serializable
+    if (entry.date) {
+      sanitizedEntry.date = entry.date instanceof Date ? entry.date.toISOString() : String(entry.date);
+    }
+    if (entry.pagesRead !== undefined) {
+      sanitizedEntry.pagesRead = Number(entry.pagesRead) || 0;
+    }
+    return sanitizedEntry;
+  });
 };
 
 const Dashboard = () => {
@@ -164,8 +171,8 @@ const Dashboard = () => {
           throw new Error('Invalid reading activity data: expected an array');
         }
 
-        // Log the first few entries to inspect their structure
-        console.log('Sample readingActivity entries:', readingActivity.slice(0, 3));
+        // Log the full structure of the first few entries to inspect for non-serializable data
+        console.log('Sample readingActivity entries (full structure):', JSON.stringify(readingActivity.slice(0, 3), null, 2));
 
         // Sanitize readingActivity to ensure serializability
         const sanitizedActivity = sanitizeReadingActivity(readingActivity);
