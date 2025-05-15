@@ -68,10 +68,22 @@ const express = require('express');
     });
   });
 
+  // Add middleware to log all incoming requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
   // API Routes
   app.use('/api/auth', authRoutes);
   app.use('/api/books', bookRoutes);
   app.use('/api/users', userRoutes);
+
+  // Test logging endpoint
+app.get('/test-logging', (req, res) => {
+  console.log('Test logging endpoint hit at:', new Date().toISOString());
+  res.json({ message: 'Logging test successful' });
+});
 
   // 404 handler
   app.use((req, res, next) => {
