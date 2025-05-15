@@ -104,10 +104,24 @@ const bookSlice = createSlice({
     },
     
     setReadingActivity: (state, action) => {
-      state.readingActivity = {
-        data: action.payload.data || [],
-        lastFetched: action.payload.lastFetched || Date.now()
-      };
+      // Handle both formats: either direct array or object with data property
+      if (Array.isArray(action.payload)) {
+        state.readingActivity = {
+          data: action.payload,
+          lastFetched: Date.now()
+        };
+      } else if (action.payload && typeof action.payload === 'object') {
+        state.readingActivity = {
+          data: Array.isArray(action.payload.data) ? action.payload.data : [],
+          lastFetched: action.payload.lastFetched || Date.now()
+        };
+      } else {
+        // Fallback to empty array if payload is invalid
+        state.readingActivity = {
+          data: [],
+          lastFetched: Date.now()
+        };
+      }
     }
   }
 });

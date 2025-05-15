@@ -170,24 +170,21 @@ const Dashboard = () => {
         const { readingActivity = [] } = resActivity.data;
         console.log('Reading Activity API response:', resActivity.data);
 
-        // Ensure readingActivity is an array
-        if (!Array.isArray(readingActivity)) {
-          console.error('readingActivity is not an array:', readingActivity);
-          throw new Error('Invalid reading activity data: expected an array');
-        }
+        // Extract the reading activity array from the response
+        const activityData = Array.isArray(readingActivity) ? readingActivity : 
+                            (resActivity.data && Array.isArray(resActivity.data.readingActivity) ? 
+                              resActivity.data.readingActivity : []);
 
         // Log the full structure of the first few entries
-        console.log('Sample readingActivity entries (full structure):', JSON.stringify(readingActivity.slice(0, 3), null, 2));
+        console.log('Sample readingActivity entries (full structure):', 
+          JSON.stringify(activityData.slice(0, 3), null, 2));
 
         // Sanitize readingActivity
-        const sanitizedActivity = sanitizeReadingActivity(readingActivity);
+        const sanitizedActivity = sanitizeReadingActivity(activityData);
 
-        const activityPayload = {
-          data: sanitizedActivity,
-          lastFetched: Date.now(),
-        };
-        console.log('Dispatching setReadingActivity with payload:', activityPayload);
-        dispatch(setReadingActivity(activityPayload));
+        // Directly dispatch the sanitized array
+        console.log('Dispatching setReadingActivity with sanitized data');
+        dispatch(setReadingActivity(sanitizedActivity));
 
         setReadingActivity(sanitizedActivity);
       } else {
