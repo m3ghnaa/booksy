@@ -4,6 +4,7 @@ const validator = require('validator');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('../config/cloudinary');
 
 // Base URL for serving uploads (adjust based on your server URL)
 const SERVER_URL = process.env.SERVER_URL;
@@ -163,153 +164,143 @@ const getUserStats = async (req, res) => {
  */
 
 
-/**
- * Update user settings
- */
-const updateUserSettings = async (req, res) => {
+ /**
+    * Update user settings
+    */
+ const updateUserSettings = async (req, res) => {
   console.log('Starting updateUserSettings...');
-  upload(req, res, async (err) => {
-    if (err) {
-      console.error('Multer upload error:', err);
-      return res.status(400).json({ message: err.message });
+  console.log('Request body:', req.body);
+  console.log('Uploaded file:', req.file);
+
+  try {
+    // Check if req.user is set by protect middleware
+    if (!req.user || !req.user.id) {
+      console.log('User not authenticated or missing ID');
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    const userId = req.user.id;
+    console.log('User ID:', userId);
+
+    // Check if req.body exists
+    if (!req.body) {
+      console.log('Request body is missing');
+      return res.status(400).json({ message: 'Request body is required' });
+    }
+
+    const { name, email, favoriteGenre, readingGoal } = req.body;
+
+    // Validate inputs
+    console.log('Validating inputs...');
+    if (!name || name.trim() === '') {
+      console.log('Validation failed: Name is required');
+      return res.status(400).json({ message: 'Name is required' });
     }
 
     try {
-      console.log('Multer processing complete. Request body:', req.body);
-      console.log('Uploaded file:', req.file);
-
-      const userId = req.user.id;
-      const { name, email, favoriteGenre, readingGoal } = req.body;
-
-      // Validate inputs
-      console.log('Validating inputs...');
-      if (!name || name.trim() === '') {
-        console.log('Validation failed: Name is required');
-        return res.status(400).json({ message: 'Name is required' });
-      }
       if (!email || !validator.isEmail(email)) {
         console.log('Validation failed: Invalid email');
         return res.status(400).json({ message: 'Valid email is required' });
       }
-      if (readingGoal !== undefined && (isNaN(readingGoal) || parseInt(readingGoal) < 0)) {
+    } catch (validationError) {
+      console.error('Email validation error:', validationError);
+      return res.status(500).json({ message: 'Error validating email' });
+    }
+
+    // Validate readingGoal
+    let parsedReadingGoal;
+    if (readingGoal !== undefined && readingGoal !== '') {
+      parsedReadingGoal = parseInt(readingGoal);
+      if (isNaN(parsedReadingGoal) || parsedReadingGoal < 0) {
         console.log('Validation failed: Invalid reading goal');
         return res.status(400).json({ message: 'Reading goal must be a non-negative number' });
       }
-
-      // Check if email is taken by another user
-      console.log('Checking for existing email...');
-      const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: userId } });
-      if (existingUser) {
-        console.log('Email already in use:', email);
-        return res.status(409).json({ message: 'Email is already in use' });
-      }
-
-      // Prepare update data
-      const updateData = {
-        name: name.trim(),
-        email: email.toLowerCase(),
-      };
-      if (favoriteGenre !== undefined) {
-        updateData.favoriteGenre = favoriteGenre.trim();
-      }
-      if (readingGoal !== undefined) {
-        updateData.readingGoal = parseInt(readingGoal);
-      }
-      console.log('Update data prepared:', updateData);
-
-      // Handle avatar upload
-      if (req.file) {
-        console.log('Processing avatar upload...');
-        try {
-          // Ensure uploads directory exists
-          const uploadsDir = path.join(__dirname, '../public/uploads');
-          console.log('Creating uploads directory if not exists:', uploadsDir);
-          fs.mkdirSync(uploadsDir, { recursive: true });
-
-          // Get current user
-          console.log('Fetching current user:', userId);
-          const user = await User.findById(userId);
-          if (!user) {
-            console.log('User not found:', userId);
-            return res.status(404).json({ message: 'User not found' });
-          }
-
-          // Remove old avatar if it exists
-          if (user.avatar && user.avatar.includes('/uploads/')) {
-            try {
-              const oldAvatarFilename = user.avatar.split('/').pop().split('?')[0];
-              const oldAvatarPath = path.join(__dirname, '../public/uploads', oldAvatarFilename);
-              console.log('Attempting to delete old avatar:', oldAvatarPath);
-              if (fs.existsSync(oldAvatarPath)) {
-                fs.unlinkSync(oldAvatarPath);
-                console.log(`Deleted old avatar: ${oldAvatarPath}`);
-              } else {
-                console.log('Old avatar file not found:', oldAvatarPath);
-              }
-            } catch (err) {
-              console.error('Error deleting old avatar:', err);
-              // Continue even if old avatar deletion fails
-            }
-          }
-
-          // Set new avatar path
-          const avatarFilename = req.file.filename;
-          const filePath = path.join(uploadsDir, req.file.filename);
-          console.log('Verifying new avatar file exists:', filePath);
-          if (!fs.existsSync(filePath)) {
-            console.error(`Avatar file not found at ${filePath}`);
-            return res.status(500).json({ message: 'Failed to save avatar' });
-          }
-
-          const avatarUrl = `/uploads/${req.file.filename}`;
-          updateData.avatar = avatarUrl;
-          console.log(`New avatar set: ${updateData.avatar}`);
-        } catch (avatarError) {
-          console.error('Avatar processing error:', avatarError);
-          return res.status(500).json({
-            message: 'Error processing avatar upload',
-            error: process.env.NODE_ENV === 'development' ? avatarError.message : undefined
-          });
-        }
-      }
-
-      // Update user
-      console.log('Updating user in database...');
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { $set: updateData },
-        { new: true, runValidators: true }
-      ).select('-password');
-
-      if (!updatedUser) {
-        console.log('User not found during update:', userId);
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      console.log('User updated successfully:', updatedUser);
-      res.status(200).json({
-        success: true,
-        message: 'Profile updated successfully',
-        user: {
-          _id: updatedUser._id,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          avatar: updatedUser.avatar,
-          favoriteGenre: updatedUser.favoriteGenre,
-          readingGoal: updatedUser.readingGoal,
-        },
-        avatarFilename: req.file ? req.file.filename : null,
-      });
-    } catch (error) {
-      console.error('Profile update error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error updating profile',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      });
     }
-  });
+
+    // Check if email is taken by another user
+    console.log('Checking for existing email with query:', { email: email.toLowerCase(), _id: { $ne: userId } });
+    const existingUser = await User.findOne({ email: email.toLowerCase(), _id: { $ne: userId } });
+    if (existingUser) {
+      console.log('Email already in use:', email);
+      return res.status(409).json({ message: 'Email is already in use' });
+    }
+
+    // Handle avatar upload to Cloudinary
+    let avatarUrl = req.user.avatar; // Keep existing avatar if no new file is uploaded
+    if (req.file) {
+      console.log('Uploading file to Cloudinary...');
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'booksy/avatars', resource_type: 'image' },
+            (error, result) => {
+              if (error) {
+                console.error('Cloudinary upload error:', error);
+                reject(error);
+              } else {
+                console.log('Cloudinary upload successful:', result.secure_url);
+                resolve(result);
+              }
+            }
+          );
+          stream.end(req.file.buffer);
+        });
+        avatarUrl = result.secure_url;
+      } catch (uploadError) {
+        console.error('Failed to upload avatar to Cloudinary:', uploadError);
+        return res.status(500).json({ message: 'Failed to upload avatar' });
+      }
+    }
+
+    // Prepare update data
+    const updateData = {
+      name: name.trim(),
+      email: email.toLowerCase(),
+      avatar: avatarUrl,
+    };
+    if (favoriteGenre !== undefined) {
+      updateData.favoriteGenre = favoriteGenre.trim();
+    }
+    if (parsedReadingGoal !== undefined) {
+      updateData.readingGoal = parsedReadingGoal;
+    }
+    console.log('Update data prepared:', updateData);
+
+    // Update user
+    console.log('Updating user in database with query:', { userId, updateData });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedUser) {
+      console.log('User not found during update:', userId);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log('User updated successfully:', updatedUser);
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar,
+        favoriteGenre: updatedUser.favoriteGenre,
+        readingGoal: updatedUser.readingGoal,
+      },
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating profile',
+      error: process.env.NODE_ENV === 'production' ? undefined : error.message,
+    });
+  }
 };
+
 
 /**
  * Update user profile (without avatar upload)
