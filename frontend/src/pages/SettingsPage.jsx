@@ -27,24 +27,19 @@ const SettingsPage = () => {
   const [hasError, setHasError] = useState(false);
   const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
 
-
   const getApiBaseUrl = () => {
     return process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com/api';
   };
 
   const formatAvatarUrl = (avatarPath) => {
     if (!avatarPath) return null;
-    
     if (avatarPath.startsWith('http')) {
       return avatarPath.replace('http:', 'https:');
     }
-    
-
     if (avatarPath.startsWith('/uploads/')) {
       const baseUrl = getApiBaseUrl();
       return `${baseUrl}${avatarPath}?t=${Date.now()}`;
     }
-    
     return avatarPath;
   };
 
@@ -77,14 +72,11 @@ const SettingsPage = () => {
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal ? user.readingGoal.toString() : ''
       });
-  
-      // Handle avatar URL properly
       if (user.avatar) {
         setPreview(formatAvatarUrl(user.avatar));
       } else {
         setPreview(null);
       }
-  
       setHasError(false);
     }
   }, [user]);
@@ -157,28 +149,21 @@ const SettingsPage = () => {
       toast.error('Please log in to remove avatar');
       return;
     }
-
     setIsRemovingAvatar(true);
     try {
-      // Send DELETE request to remove the avatar
       const response = await api.delete('/users/avatar');
-
-      // Update Redux store with the updated user (avatar: null)
       const updatedUser = {
         ...user,
         avatar: null
       };
       dispatch(updateUser(updatedUser));
       dispatch(setUserProfile(updatedUser));
-
-      // Clear formData.avatar and preview
       setFormData((prev) => ({
         ...prev,
         avatar: null
       }));
       setPreview(null);
       setHasError(false);
-
       toast.success('Avatar removed successfully');
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Failed to remove avatar';
@@ -194,12 +179,10 @@ const SettingsPage = () => {
       toast.error('Please log in to update settings');
       return;
     }
-
     if (!validateForm()) {
       toast.error('Please fix form errors');
       return;
     }
-
     setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
@@ -211,38 +194,26 @@ const SettingsPage = () => {
         formDataToSend.append('avatar', formData.avatar);
       }
 
-      const response = await api.put('/users/settings', formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await api.put('/users/settings', formDataToSend); // Removed manual Content-Type header
 
-      // Handle the avatar URL from the response
       let updatedAvatar = response.data.user.avatar;
-      
-      // If we got an avatarFilename back and need to construct the URL
       if (response.data.avatarFilename) {
         updatedAvatar = formatAvatarUrl(`/uploads/${response.data.avatarFilename}`);
       } else if (updatedAvatar) {
         updatedAvatar = formatAvatarUrl(updatedAvatar);
       }
-      
       const updatedUser = {
         ...response.data.user,
         avatar: updatedAvatar
       };
-
       dispatch(updateUser(updatedUser));
       dispatch(setUserProfile(updatedUser));
-
-      // Fetch latest user data to ensure Redux store is synchronized
       const refreshResponse = await api.get('/auth/me');
       const refreshedUser = {
         ...refreshResponse.data.user,
         avatar: formatAvatarUrl(refreshResponse.data.user.avatar)
       };
       dispatch(updateUser(refreshedUser));
-
       setPreview(updatedUser.avatar);
       setFormData((prev) => ({
         ...prev,
@@ -271,7 +242,6 @@ const SettingsPage = () => {
   if (!isAuthenticated) {
     return <div className="container mt-5">Please log in to view settings.</div>;
   }
-
   if (isLoadingUser) {
     return <div className="container mt-5">Loading user data...</div>;
   }
@@ -295,7 +265,6 @@ const SettingsPage = () => {
             />
             {errors.name && <div className="invalid-feedback">{errors.name}</div>}
           </div>
-
           <div className="mb-3">
             <label htmlFor="email" className="form-label">Email</label>
             <input
@@ -309,7 +278,6 @@ const SettingsPage = () => {
             />
             {errors.email && <div className="invalid-feedback">{errors.email}</div>}
           </div>
-
           <div className="mb-3">
             <label htmlFor="favoriteGenre" className="form-label">Favorite Genre</label>
             <input
@@ -324,7 +292,6 @@ const SettingsPage = () => {
             />
             {errors.favoriteGenre && <div className="invalid-feedback">{errors.favoriteGenre}</div>}
           </div>
-
           <div className="mb-3">
             <label htmlFor="readingGoal" className="form-label">Reading Goal (books per year)</label>
             <input
@@ -340,7 +307,6 @@ const SettingsPage = () => {
             />
             {errors.readingGoal && <div className="invalid-feedback">{errors.readingGoal}</div>}
           </div>
-
           <div className="mb-3">
             <label htmlFor="avatar" className="form-label">Avatar (PNG, JPG, JPEG, max 5MB)</label>
             <input
@@ -354,7 +320,6 @@ const SettingsPage = () => {
             />
             {errors.avatar && <div className="invalid-feedback">{errors.avatar}</div>}
           </div>
-
           {preview ? (
             <div className="mb-3">
               <label className="form-label">Avatar Preview</label>
@@ -382,7 +347,6 @@ const SettingsPage = () => {
               />
             </div>
           )}
-
           {preview && (
             <div className="mb-3">
               <button
@@ -395,7 +359,6 @@ const SettingsPage = () => {
               </button>
             </div>
           )}
-
           <button
             type="submit"
             className="btn btn-primary"
