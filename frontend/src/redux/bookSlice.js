@@ -104,19 +104,34 @@ const bookSlice = createSlice({
     },
     
     setReadingActivity: (state, action) => {
-      // Handle both formats: either direct array or object with data property
-      if (Array.isArray(action.payload)) {
+      try {
+        // Simple case: if it's an object with a data property that's an array
+        if (action.payload && typeof action.payload === 'object' && 'data' in action.payload && Array.isArray(action.payload.data)) {
+          state.readingActivity = {
+            data: action.payload.data,
+            lastFetched: Date.now()
+          };
+          return;
+        }
+        
+        // If it's just an array, use that directly
+        if (Array.isArray(action.payload)) {
+          state.readingActivity = {
+            data: action.payload,
+            lastFetched: Date.now()
+          };
+          return;
+        }
+        
+        // Fallback to empty array
+        console.warn('Invalid reading activity data format:', action.payload);
         state.readingActivity = {
-          data: action.payload,
+          data: [],
           lastFetched: Date.now()
         };
-      } else if (action.payload && typeof action.payload === 'object') {
-        state.readingActivity = {
-          data: Array.isArray(action.payload.data) ? action.payload.data : [],
-          lastFetched: action.payload.lastFetched || Date.now()
-        };
-      } else {
-        // Fallback to empty array if payload is invalid
+      } catch (error) {
+        console.error('Error in setReadingActivity reducer:', error);
+        // Ensure we always have a valid state
         state.readingActivity = {
           data: [],
           lastFetched: Date.now()

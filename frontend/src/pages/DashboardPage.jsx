@@ -59,16 +59,23 @@ const getDailyQuote = () => {
 
 // Utility function to deeply sanitize data for serialization
 const sanitizeReadingActivity = (activity) => {
-  return activity.map(entry => {
-    const sanitizedEntry = {};
-    if (entry.date) {
-      sanitizedEntry.date = entry.date instanceof Date ? entry.date.toISOString() : String(entry.date);
-    }
-    if (entry.pagesRead !== undefined) {
-      sanitizedEntry.pagesRead = Number(entry.pagesRead) || 0;
-    }
-    return sanitizedEntry;
-  });
+  if (!Array.isArray(activity)) {
+    console.error('Invalid activity data:', activity);
+    return [];
+  }
+  
+  try {
+    return activity.map(entry => {
+      // Create a new plain object with only the properties we need
+      return {
+        date: typeof entry.date === 'string' ? entry.date : String(new Date().toISOString()),
+        pagesRead: typeof entry.pagesRead === 'number' ? entry.pagesRead : 0
+      };
+    });
+  } catch (error) {
+    console.error('Error sanitizing reading activity:', error);
+    return [];
+  }
 };
 
 const Dashboard = () => {
@@ -171,20 +178,34 @@ const Dashboard = () => {
         console.log('Reading Activity API response:', resActivity.data);
 
         // Extract the reading activity array from the response
-        const activityData = Array.isArray(readingActivity) ? readingActivity : 
-                            (resActivity.data && Array.isArray(resActivity.data.readingActivity) ? 
-                              resActivity.data.readingActivity : []);
-
-        // Log the full structure of the first few entries
-        console.log('Sample readingActivity entries (full structure):', 
-          JSON.stringify(activityData.slice(0, 3), null, 2));
-
-        // Sanitize readingActivity
+        let activityData = [];
+        
+        if (Array.isArray(readingActivity)) {
+          activityData = readingActivity;
+        } else if (resActivity.data && Array.isArray(resActivity.data.readingActivity)) {
+          activityData = resActivity.data.readingActivity;
+        }
+        
+        console.log('Raw activity data type:', typeof activityData);
+        console.log('Is array:', Array.isArray(activityData));
+        
+        if (activityData.length > 0) {
+          console.log('Sample readingActivity entries (first 3):', 
+            JSON.stringify(activityData.slice(0, 3), null, 2));
+        }
+        
+        // Create a completely new array with only the data we need
         const sanitizedActivity = sanitizeReadingActivity(activityData);
-
-        // Directly dispatch the sanitized array
-        console.log('Dispatching setReadingActivity with sanitized data');
-        dispatch(setReadingActivity(sanitizedActivity));
+        console.log('Sanitized activity (first 3):', 
+          JSON.stringify(sanitizedActivity.slice(0, 3), null, 2));
+        
+        // Create a simple object with the data property
+        const activityPayload = { data: sanitizedActivity };
+        
+        // Dispatch the payload
+        console.log('Dispatching reading activity with payload structure:', 
+          Object.keys(activityPayload));
+        dispatch(setReadingActivity(activityPayload));
 
         setReadingActivity(sanitizedActivity);
       } else {
