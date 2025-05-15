@@ -61,7 +61,6 @@ const getDailyQuote = () => {
 const sanitizeReadingActivity = (activity) => {
   return activity.map(entry => {
     const sanitizedEntry = {};
-    // Only keep expected fields and ensure they are serializable
     if (entry.date) {
       sanitizedEntry.date = entry.date instanceof Date ? entry.date.toISOString() : String(entry.date);
     }
@@ -121,6 +120,12 @@ const Dashboard = () => {
         const resBooks = await api.get('/books');
         const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
         console.log('Books API response:', resBooks.data);
+
+        // Log the full structure of book arrays to check for non-serializable data
+        console.log('currentlyReading (full structure):', JSON.stringify(currentlyReading, null, 2));
+        console.log('wantToRead (full structure):', JSON.stringify(wantToRead, null, 2));
+        console.log('finishedReading (full structure):', JSON.stringify(finishedReading, null, 2));
+
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
       } else {
         console.log('Using cached books data...');
@@ -171,10 +176,10 @@ const Dashboard = () => {
           throw new Error('Invalid reading activity data: expected an array');
         }
 
-        // Log the full structure of the first few entries to inspect for non-serializable data
+        // Log the full structure of the first few entries
         console.log('Sample readingActivity entries (full structure):', JSON.stringify(readingActivity.slice(0, 3), null, 2));
 
-        // Sanitize readingActivity to ensure serializability
+        // Sanitize readingActivity
         const sanitizedActivity = sanitizeReadingActivity(readingActivity);
 
         const activityPayload = {
