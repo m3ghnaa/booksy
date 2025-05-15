@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import api from '../utils/axiosConfig';
 import Navbar from '../components/Navbar';
 import { syncUserWithUserSlice } from '../redux/authSlice';
+import { FaUserCircle, FaUserAstronaut, FaUserNinja, FaUserSecret, FaUserTie } from 'react-icons/fa';
 
 // Static list of genres
 const genres = [
@@ -20,6 +21,15 @@ const genres = [
   'History'
 ];
 
+// Avatar options with styles
+const avatarOptions = [
+  { icon: FaUserCircle, name: 'FaUserCircle', style: { color: '#007bff', backgroundColor: '#e7f1ff', borderColor: '#007bff' } },
+  { icon: FaUserAstronaut, name: 'FaUserAstronaut', style: { color: '#ff5733', backgroundColor: '#ffe7e3', borderColor: '#ff5733' } },
+  { icon: FaUserNinja, name: 'FaUserNinja', style: { color: '#28a745', backgroundColor: '#e6f4ea', borderColor: '#28a745' } },
+  { icon: FaUserSecret, name: 'FaUserSecret', style: { color: '#6f42c1', backgroundColor: '#f3e8ff', borderColor: '#6f42c1' } },
+  { icon: FaUserTie, name: 'FaUserTie', style: { color: '#dc3545', backgroundColor: '#f8e1e4', borderColor: '#dc3545' } }
+];
+
 const SettingsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -30,6 +40,7 @@ const SettingsPage = () => {
     email: '',
     favoriteGenre: '',
     readingGoal: '',
+    avatar: '' // Add avatar to formData
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -46,6 +57,7 @@ const SettingsPage = () => {
         email: user.email || '',
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal || '',
+        avatar: user.avatar || 'FaUserCircle' // Default to FaUserCircle if no avatar is set
       });
     }
   }, [isAuthenticated, user, navigate]);
@@ -54,9 +66,16 @@ const SettingsPage = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
+  };
+
+  const handleAvatarSelect = (avatarName) => {
+    setFormData((prev) => ({
+      ...prev,
+      avatar: avatarName
+    }));
   };
 
   const validateForm = () => {
@@ -95,6 +114,7 @@ const SettingsPage = () => {
         email: formData.email,
         favoriteGenre: formData.favoriteGenre,
         ...(readingGoalNum >= 1 && { readingGoal: readingGoalNum }),
+        avatar: formData.avatar // Include avatar in the payload
       };
       console.log('SettingsPage: Sending payload to /api/users/settings:', payload);
       const response = await api.put('/users/settings', payload);
@@ -121,6 +141,32 @@ const SettingsPage = () => {
 
   return (
     <>
+      <style>
+        {`
+          .avatar-option {
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+            width: 60px;
+            height: 60px;
+          }
+          .avatar-option.selected {
+            border: 3px solid;
+            transform: scale(1.1);
+          }
+          .avatar-option:hover {
+            transform: scale(1.1);
+          }
+          .avatar-icon {
+            font-size: 2rem;
+          }
+        `}
+      </style>
       <Navbar user={user} />
       <div className="container mt-5 pt-5">
         <h2 className="mb-4">Settings</h2>
@@ -150,6 +196,27 @@ const SettingsPage = () => {
               required
             />
             {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Select Avatar</label>
+            <div className="d-flex flex-wrap">
+              {avatarOptions.map(({ icon: Icon, name, style }) => (
+                <div
+                  key={name}
+                  className={`avatar-option ${formData.avatar === name ? 'selected' : ''}`}
+                  style={{
+                    color: style.color,
+                    backgroundColor: style.backgroundColor,
+                    borderColor: style.borderColor,
+                    border: formData.avatar === name ? `3px solid ${style.borderColor}` : '1px solid #ccc'
+                  }}
+                  onClick={() => handleAvatarSelect(name)}
+                  title={name}
+                >
+                  <Icon className="avatar-icon" />
+                </div>
+              ))}
+            </div>
           </div>
           <div className="mb-3">
             <label htmlFor="favoriteGenre" className="form-label">Favorite Genre</label>

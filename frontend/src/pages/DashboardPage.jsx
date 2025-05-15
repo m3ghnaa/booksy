@@ -5,12 +5,21 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { clearSearchResults } from '../redux/searchSlice';
 import { setBooks, setProgressUpdated, setUserStats } from '../redux/bookSlice';
-import { logoutUser, syncUserWithUserSlice } from '../redux/authSlice';
+import { logoutUser } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/Navbar';
 import api from '../utils/axiosConfig';
-import { FaBook, FaFileAlt, FaFire, FaQuoteLeft, FaUserCircle } from 'react-icons/fa';
+import { FaBook, FaFileAlt, FaFire, FaQuoteLeft, FaUserCircle, FaUserAstronaut, FaUserNinja, FaUserSecret, FaUserTie } from 'react-icons/fa';
+
+// Map of avatar names to icons
+const avatarIcons = {
+  FaUserCircle: FaUserCircle,
+  FaUserAstronaut: FaUserAstronaut,
+  FaUserNinja: FaUserNinja,
+  FaUserSecret: FaUserSecret,
+  FaUserTie: FaUserTie
+};
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -82,7 +91,6 @@ const Dashboard = () => {
       const resUser = await api.get('/users/me');
       console.log('User data fetched from /api/users/me:', resUser.data);
       if (resUser.data.success && resUser.data.user) {
-        // Use syncUserWithUserSlice to update both authSlice and userSlice
         dispatch(syncUserWithUserSlice(resUser.data.user));
         console.log('Dispatched syncUserWithUserSlice with:', resUser.data.user);
       } else {
@@ -142,14 +150,11 @@ const Dashboard = () => {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logoutUser()); // Use the logoutUser thunk
+    dispatch(logoutUser());
     dispatch(setBooks({ currentlyReading: [], wantToRead: [], finishedReading: [] }));
     dispatch(setUserStats({ maxReadingStreak: 0, currentStreak: 0, totalPagesRead: 0, totalBooksRead: 0 }));
     setReadingActivity([]);
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
     navigate('/login');
-    // toast.info is handled in logoutUser thunk
   };
 
   const handleRefresh = () => {
@@ -201,6 +206,9 @@ const Dashboard = () => {
   const joinDate = authUser?.createdAt
     ? new Date(authUser.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : 'May 2025';
+
+  // Dynamically select the avatar icon
+  const AvatarIcon = avatarIcons[authUser?.avatar] || FaUserCircle;
 
   return (
     <>
@@ -284,7 +292,7 @@ const Dashboard = () => {
               <div className="col-12">
                 <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
                   <div className="me-3">
-                    <FaUserCircle className="text-muted profile-avatar" />
+                    <AvatarIcon className="text-muted profile-avatar" />
                   </div>
                   <div className="flex-grow-1">
                     <h4 className="profile-name mb-1">{authUser?.name || 'User'}</h4>
