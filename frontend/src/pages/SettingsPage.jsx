@@ -6,8 +6,8 @@ import api from '../utils/axiosConfig';
 import Navbar from '../components/Navbar';
 import { syncUserWithUserSlice } from '../redux/authSlice';
 
-// Static list of genres as a fallback
-const defaultGenres = [
+// Static list of genres
+const genres = [
   'Fiction',
   'Non-Fiction',
   'Science Fiction',
@@ -27,11 +27,10 @@ const SettingsPage = () => {
 
   const [formData, setFormData] = useState({
     name: '',
-    email: '', // Add email field
+    email: '',
     favoriteGenre: '',
     readingGoal: '',
   });
-  const [genres, setGenres] = useState(defaultGenres);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -41,26 +40,10 @@ const SettingsPage = () => {
       return;
     }
 
-    // Attempt to fetch genres from the backend
-    const fetchGenres = async () => {
-      try {
-        const response = await api.get('/genres');
-        if (response.data.genres && Array.isArray(response.data.genres)) {
-          setGenres(response.data.genres);
-        } else {
-          console.warn('SettingsPage: Invalid genres response, using default genres:', response.data);
-        }
-      } catch (error) {
-        console.warn('SettingsPage: Failed to fetch genres, using default genres:', error.message);
-      }
-    };
-
-    fetchGenres();
-
     if (user) {
       setFormData({
         name: user.name || '',
-        email: user.email || '', // Prepopulate email from user state
+        email: user.email || '',
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal || '',
       });
@@ -109,7 +92,7 @@ const SettingsPage = () => {
       const readingGoalNum = parseInt(formData.readingGoal);
       const payload = {
         name: formData.name,
-        email: formData.email, // Include email in the payload
+        email: formData.email,
         favoriteGenre: formData.favoriteGenre,
         ...(readingGoalNum >= 1 && { readingGoal: readingGoalNum }),
       };
