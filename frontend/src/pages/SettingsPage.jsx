@@ -6,6 +6,20 @@ import api from '../utils/axiosConfig';
 import Navbar from '../components/Navbar';
 import { syncUserWithUserSlice } from '../redux/authSlice';
 
+// Static list of genres as a fallback
+const defaultGenres = [
+  'Fiction',
+  'Non-Fiction',
+  'Science Fiction',
+  'Fantasy',
+  'Self-Help',
+  'Mystery',
+  'Romance',
+  'Thriller',
+  'Biography',
+  'History'
+];
+
 const SettingsPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -13,9 +27,11 @@ const SettingsPage = () => {
 
   const [formData, setFormData] = useState({
     name: '',
+    email: '', // Add email field
     favoriteGenre: '',
     readingGoal: '',
   });
+  const [genres, setGenres] = useState(defaultGenres);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -25,9 +41,26 @@ const SettingsPage = () => {
       return;
     }
 
+    // Attempt to fetch genres from the backend
+    const fetchGenres = async () => {
+      try {
+        const response = await api.get('/genres');
+        if (response.data.genres && Array.isArray(response.data.genres)) {
+          setGenres(response.data.genres);
+        } else {
+          console.warn('SettingsPage: Invalid genres response, using default genres:', response.data);
+        }
+      } catch (error) {
+        console.warn('SettingsPage: Failed to fetch genres, using default genres:', error.message);
+      }
+    };
+
+    fetchGenres();
+
     if (user) {
       setFormData({
         name: user.name || '',
+        email: user.email || '', // Prepopulate email from user state
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal || '',
       });
@@ -40,15 +73,21 @@ const SettingsPage = () => {
       ...prev,
       [name]: value,
     }));
-    // Clear error for the field being edited
     setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = () => {
     const newErrors = {};
+    // Validate name
     if (!formData.name || formData.name.length < 3 || formData.name.length > 50) {
       newErrors.name = 'Name must be between 3 and 50 characters';
     }
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      newErrors.email = 'A valid email is required';
+    }
+    // Validate readingGoal
     const readingGoalNum = parseInt(formData.readingGoal);
     if (formData.readingGoal && (isNaN(readingGoalNum) || readingGoalNum < 1)) {
       newErrors.readingGoal = 'Reading goal must be a positive number';
@@ -70,8 +109,9 @@ const SettingsPage = () => {
       const readingGoalNum = parseInt(formData.readingGoal);
       const payload = {
         name: formData.name,
+        email: formData.email, // Include email in the payload
         favoriteGenre: formData.favoriteGenre,
-        ...(readingGoalNum >= 1 && { readingGoal: readingGoalNum }), // Only include readingGoal if >= 1
+        ...(readingGoalNum >= 1 && { readingGoal: readingGoalNum }),
       };
       console.log('SettingsPage: Sending payload to /api/users/settings:', payload);
       const response = await api.put('/users/settings', payload);
@@ -116,15 +156,35 @@ const SettingsPage = () => {
             {errors.name && <div className="invalid-feedback">{errors.name}</div>}
           </div>
           <div className="mb-3">
-            <label htmlFor="favoriteGenre" className="form-label">Favorite Genre</label>
+            <label htmlFor="email" className="form-label">Email</label>
             <input
-              type="text"
-              className="form-control"
+              type="email"
+              className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+          </div>
+          <div className="mb-3">
+            <label htmlFor="favoriteGenre" className="form-label">Favorite Genre</label>
+            <select
+              className={`form-control ${errors.favoriteGenre ? 'is-invalid' : ''}`}
               id="favoriteGenre"
               name="favoriteGenre"
               value={formData.favoriteGenre}
               onChange={handleChange}
-            />
+            >
+              <option value="">Select a genre (optional)</option>
+              {genres.map((genre) => (
+                <option key={genre} value={genre}>
+                  {genre}
+                </option>
+              ))}
+            </select>
+            {errors.favoriteGenre && <div className="invalid-feedback">{errors.favoriteGenre}</div>}
           </div>
           <div className="mb-3">
             <label htmlFor="readingGoal" className="form-label">Reading Goal (Books per Year)</label>
