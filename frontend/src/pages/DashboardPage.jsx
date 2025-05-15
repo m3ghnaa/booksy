@@ -57,6 +57,14 @@ const getDailyQuote = () => {
   return selectedQuote;
 };
 
+// Utility function to sanitize data for serialization
+const sanitizeReadingActivity = (activity) => {
+  return activity.map(entry => ({
+    date: entry.date instanceof Date ? entry.date.toISOString() : String(entry.date),
+    pagesRead: Number(entry.pagesRead) || 0,
+  }));
+};
+
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -80,7 +88,7 @@ const Dashboard = () => {
   const cachedActivity = useSelector((state) => state.books.readingActivity);
 
   // Production backend URL
-  const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
+  const API_URL = process.env.REACT_APP_API_URL || 'https://booksy-backend.up.railway.app';
 
   // Construct full avatar URL
   const formatAvatarUrl = (avatarPath) => {
@@ -105,7 +113,7 @@ const Dashboard = () => {
         console.log('Fetching books from API...');
         const resBooks = await api.get('/books');
         const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
-        console.log('Books API response:', resBooks.data); // Debug log
+        console.log('Books API response:', resBooks.data);
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
       } else {
         console.log('Using cached books data...');
@@ -117,7 +125,7 @@ const Dashboard = () => {
         console.log('Fetching user stats from API...');
         const resStats = await api.get('/users/stats');
         const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
-        console.log('Stats API response:', resStats.data); // Debug log
+        console.log('Stats API response:', resStats.data);
 
         const statsPayload = {
           maxReadingStreak,
@@ -126,7 +134,7 @@ const Dashboard = () => {
           totalBooksRead: completedBooks,
           lastFetched: Date.now(),
         };
-        console.log('Dispatching setUserStats with payload:', statsPayload); // Debug log
+        console.log('Dispatching setUserStats with payload:', statsPayload);
         dispatch(setUserStats(statsPayload));
 
         // Update local state
@@ -148,7 +156,7 @@ const Dashboard = () => {
         console.log('Fetching reading activity from API...');
         const resActivity = await api.get('/users/reading-activity');
         const { readingActivity = [] } = resActivity.data;
-        console.log('Reading Activity API response:', resActivity.data); // Debug log
+        console.log('Reading Activity API response:', resActivity.data);
 
         // Ensure readingActivity is an array
         if (!Array.isArray(readingActivity)) {
@@ -156,24 +164,29 @@ const Dashboard = () => {
           throw new Error('Invalid reading activity data: expected an array');
         }
 
+        // Log the first few entries to inspect their structure
+        console.log('Sample readingActivity entries:', readingActivity.slice(0, 3));
+
+        // Sanitize readingActivity to ensure serializability
+        const sanitizedActivity = sanitizeReadingActivity(readingActivity);
+
         const activityPayload = {
-          data: readingActivity,
+          data: sanitizedActivity,
           lastFetched: Date.now(),
         };
-        console.log('Dispatching setReadingActivity with payload:', activityPayload); // Debug log
+        console.log('Dispatching setReadingActivity with payload:', activityPayload);
         dispatch(setReadingActivity(activityPayload));
 
-        setReadingActivity(readingActivity);
+        setReadingActivity(sanitizedActivity);
       } else {
         console.log('Using cached reading activity data...');
         const cachedData = cachedActivity.data || [];
-        console.log('Cached reading activity data:', cachedData); // Debug log
+        console.log('Cached reading activity data:', cachedData);
         setReadingActivity(Array.isArray(cachedData) ? cachedData : []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load your data');
-      // Reset readingActivity to an empty array on error
       setReadingActivity([]);
     } finally {
       setLoading(false);
@@ -223,7 +236,6 @@ const Dashboard = () => {
   };
 
   const chartData = React.useMemo(() => {
-    // Ensure readingActivity is an array
     const activityArray = Array.isArray(readingActivity) ? readingActivity : [];
     return {
       labels: activityArray.map((entry) => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
