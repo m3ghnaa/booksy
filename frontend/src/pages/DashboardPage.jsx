@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { clearSearchResults } from '../redux/searchSlice';
-import { setBooks, setProgressUpdated, setUserStats, setReadingActivity } from '../redux/bookSlice';
+import { setBooks, setProgressUpdated, setUserStats } from '../redux/bookSlice'; // Removed setReadingActivity
 import { logout } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -62,10 +62,11 @@ const getDailyQuote = () => {
   return selectedQuote;
 };
 
-// Utility function to deeply sanitize data for serialization
-// Added more robust checking and logging
-const sanitizeReadingActivity = (activity) => {
-  console.log('Sanitizing reading activity...');
+// Utility function to sanitize data for local component state
+// Less strict than Redux sanitization as it's not going into the store,
+// but still good practice to ensure expected format for the chart.
+const sanitizeReadingActivityForLocalState = (activity) => {
+  console.log('Sanitizing reading activity for local state...');
   if (!Array.isArray(activity)) {
     console.error('Invalid activity data: Input is not an array', activity);
     return [];
@@ -74,28 +75,19 @@ const sanitizeReadingActivity = (activity) => {
   const sanitized = [];
   try {
     for (const entry of activity) {
-      // Explicitly check if entry is a non-null object before processing
-      if (entry && typeof entry === 'object') {
-        const sanitizedEntry = {
-          date: typeof entry.date === 'string' ? entry.date : String(new Date().toISOString()),
-          pagesRead: typeof entry.pagesRead === 'number' ? entry.pagesRead : 0
-        };
-         // Add a check for unexpected properties, though map should prevent this
-        if (Object.keys(entry).length > 2 && (typeof entry.date === 'string' && typeof entry.pagesRead === 'number')) {
-             console.warn('Sanitizing entry with unexpected properties, only keeping date and pagesRead:', entry);
-        } else if (typeof entry.date !== 'string' || typeof entry.pagesRead !== 'number') {
-             console.warn('Sanitizing entry with unexpected data types:', entry);
-        }
-
-        sanitized.push(sanitizedEntry);
-      } else {
-        console.warn('Sanitize skipped invalid entry (not a valid object):', entry);
-      }
+       if (entry && typeof entry === 'object') {
+         sanitized.push({
+           date: typeof entry.date === 'string' ? entry.date : String(new Date().toISOString()),
+           pagesRead: typeof entry.pagesRead === 'number' ? entry.pagesRead : 0
+         });
+       } else {
+         console.warn('Sanitize skipped invalid entry for local state:', entry);
+       }
     }
-    console.log('Sanitized reading activity array (length:', sanitized.length, '), first 5 entries:', JSON.stringify(sanitized.slice(0, 5)));
+    console.log('Sanitized reading activity array for local state (length:', sanitized.length, '), first 5 entries:', JSON.stringify(sanitized.slice(0, 5)));
     return sanitized;
   } catch (error) {
-    console.error('Error during reading activity sanitization:', error);
+    console.error('Error during reading activity sanitization for local state:', error);
     return [];
   }
 };
@@ -104,16 +96,18 @@ const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  // Use state derived from Redux cache initially
+  // Use state derived from Redux cache initially for stats
   const cachedStats = useSelector((state) => state.books.stats);
-  const cachedActivity = useSelector((state) => state.books.readingActivity);
 
   const [maxReadingStreak, setMaxReadingStreak] = useState(cachedStats?.maxReadingStreak || 0);
   const [currentStreak, setCurrentStreak] = useState(cachedStats?.currentStreak || 0);
   const [totalPagesRead, setTotalPagesRead] = useState(cachedStats?.totalPagesRead || 0);
   const [totalBooksRead, setTotalBooksRead] = useState(cachedStats?.totalBooksRead || 0);
-  // Use cached activity data or default to empty array
-  const [readingActivity, setReadingActivity] = useState(Array.isArray(cachedActivity?.data) ? cachedActivity.data : []);
+  // Manage readingActivity in local state
+  const [readingActivity, setReadingActivity] = useState([]);
+  // State to manage caching for local reading activity
+  const [localActivityCache, setLocalActivityCache] = useState({ data: [], lastFetched: null });
+
 
   const [dailyQuote, setDailyQuote] = useState(getDailyQuote());
   const [hasAvatarError, setHasAvatarError] = useState(false);
@@ -121,11 +115,11 @@ const Dashboard = () => {
   const { isAuthenticated, user, books } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
     user: state.auth.user,
-    books: state.books, // Get the whole books slice for lastFetched/progressUpdated checks
+    books: state.books, // Still need this for lastFetched/progressUpdated checks
   }));
 
   // Production backend URL
-  const API_URL = process.env.REACT_APP_SERVER_URL || 'https://booksy-17xg.onrender.com';
+  const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
 
   // Construct full avatar URL
   const formatAvatarUrl = (avatarPath) => {
@@ -133,20 +127,19 @@ const Dashboard = () => {
     if (avatarPath.startsWith('/uploads/')) {
       return `${API_URL}${avatarPath}`;
     }
-    // Handle legacy localhost URLs if necessary, although direct /uploads/ path is preferred
     if (avatarPath.includes('localhost')) {
       try {
         const filename = avatarPath.split('/uploads/')[1];
         return `${API_URL}/uploads/${filename}`;
       } catch (e) {
         console.error("Failed to parse localhost avatar path:", avatarPath, e);
-        return null; // Return null if parsing fails
+        return null;
       }
     }
-    return avatarPath; // Return as is if it's already a full URL
+    return avatarPath;
   };
 
-  const fetchBooksAndStats = async () => {
+  const fetchData = async () => { // Renamed from fetchBooksAndStats
     setLoading(true);
     try {
       // Fetch books - only if cache is old or progress updated
@@ -156,11 +149,6 @@ const Dashboard = () => {
         const resBooks = await api.get('/books');
         const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
         console.log('Dashboard: Books API response received.');
-
-        // Note: Sanitization of book objects themselves is handled implicitly
-        // by ensuring the API returns serializable data or by separate logic
-        // if non-serializable data is expected. Assuming basic book data is serializable.
-
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
       } else {
         console.log('Dashboard: Using cached books data...');
@@ -183,45 +171,39 @@ const Dashboard = () => {
         console.log('Dashboard: Dispatching setUserStats with payload:', statsPayload);
         dispatch(setUserStats(statsPayload));
 
-        // Update local state based on fetched stats
         setMaxReadingStreak(maxReadingStreak);
         setCurrentStreak(currentStreak);
         setTotalPagesRead(totalPagesRead);
         setTotalBooksRead(completedBooks);
       } else {
         console.log('Dashboard: Using cached stats data...');
-         // Update local state from cached stats if not fetching
         setMaxReadingStreak(cachedStats?.maxReadingStreak || 0);
         setCurrentStreak(cachedStats?.currentStreak || 0);
         setTotalPagesRead(cachedStats?.totalPagesRead || 0);
         setTotalBooksRead(cachedStats?.totalBooksRead || 0);
       }
 
-      // Fetch reading activity - only if cache is old or progress updated
-      const shouldFetchActivity = !cachedActivity.lastFetched || (Date.now() - cachedActivity.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
+      // Fetch reading activity - manage locally
+      // Check local cache for reading activity
+      const shouldFetchActivity = !localActivityCache.lastFetched || (Date.now() - localActivityCache.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchActivity) {
-        console.log('Dashboard: Fetching reading activity from API...');
+        console.log('Dashboard: Fetching reading activity from API (for local state)...');
         const resActivity = await api.get('/users/reading-activity');
-        const rawReadingActivity = resActivity.data?.readingActivity || []; // Handle potential missing property
-        console.log('Dashboard: Reading Activity API response received. Raw data type:', typeof rawReadingActivity, 'Is Array:', Array.isArray(rawReadingActivity));
+        const rawReadingActivity = resActivity.data?.readingActivity || [];
+        console.log('Dashboard: Reading Activity API response received (for local state).');
 
-        // Sanitize the fetched activity data
-        const sanitizedActivity = sanitizeReadingActivity(rawReadingActivity);
+        const sanitizedActivity = sanitizeReadingActivityForLocalState(rawReadingActivity);
 
-        // Dispatch the sanitized data to Redux
-        console.log('Dashboard: Dispatching setReadingActivity with sanitized data...');
-        // The reducer expects { data: Array, lastFetched: Number }
-        dispatch(setReadingActivity({ data: sanitizedActivity }));
-
-        // Update local state with sanitized data
+        // Update local state and local cache
         setReadingActivity(sanitizedActivity);
+        setLocalActivityCache({ data: sanitizedActivity, lastFetched: Date.now() });
 
       } else {
-        console.log('Dashboard: Using cached reading activity data...');
-        // Update local state from cached activity if not fetching
-        const cachedData = cachedActivity?.data || [];
-        setReadingActivity(Array.isArray(cachedData) ? cachedData : []);
+        console.log('Dashboard: Using cached reading activity data from local state...');
+        // Use data from local cache
+        setReadingActivity(localActivityCache.data);
       }
+
 
     } catch (error) {
       console.error('Dashboard: Error fetching data:', error);
@@ -231,20 +213,18 @@ const Dashboard = () => {
       setCurrentStreak(cachedStats?.currentStreak || 0);
       setTotalPagesRead(cachedStats?.totalPagesRead || 0);
       setTotalBooksRead(cachedStats?.totalBooksRead || 0);
-      setReadingActivity(Array.isArray(cachedActivity?.data) ? cachedActivity.data : []);
+      // On error, fall back to cached local activity data if available
+      setReadingActivity(Array.isArray(localActivityCache?.data) ? localActivityCache.data : []);
     } finally {
       setLoading(false);
-      // Reset progress updated flag after fetch attempt
       dispatch(setProgressUpdated(false));
     }
   };
 
-  // Clear search results on component mount
   useEffect(() => {
     dispatch(clearSearchResults());
   }, [dispatch]);
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -255,11 +235,9 @@ const Dashboard = () => {
   // Fetch data on mount or when isAuthenticated/progressUpdated changes
   useEffect(() => {
     if (!isAuthenticated) return;
-    fetchBooksAndStats();
-    // progressUpdated is handled within fetchBooksAndStats finally block
+    fetchData();
   }, [dispatch, isAuthenticated, books.progressUpdated]); // Depend on progressUpdated state
 
-  // Update daily quote if date changes
   useEffect(() => {
     const today = new Date().toDateString();
     if (localStorage.getItem('quoteDate') !== today) {
@@ -269,21 +247,20 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    // Clear book state on logout
     dispatch(setBooks({
       currentlyReading: [],
       wantToRead: [],
       finishedReading: []
     }));
-    // Clear stats state on logout (optional, depends on whether you want stats to persist across sessions)
     dispatch(setUserStats({
       maxReadingStreak: 0,
       currentStreak: 0,
       totalPagesRead: 0,
       totalBooksRead: 0,
     }));
-     // Clear activity state on logout (optional)
-    dispatch(setReadingActivity({ data: [] }));
+    // Clear local reading activity state and cache on logout
+    setReadingActivity([]);
+    setLocalActivityCache({ data: [], lastFetched: null });
 
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
@@ -293,21 +270,17 @@ const Dashboard = () => {
 
   const handleRefresh = () => {
     // Force refetch by setting progressUpdated to true temporarily
-    // This will trigger the useEffect dependency
     dispatch(setProgressUpdated(true));
-    // fetchBooksAndStats is now triggered by the useEffect watching progressUpdated
     toast.info('Refreshing data...');
   };
 
-  // Memoize chart data to avoid unnecessary recalculations
+  // Memoize chart data based on local readingActivity state
   const chartData = useMemo(() => {
     const activityArray = Array.isArray(readingActivity) ? readingActivity : [];
-     // Ensure data points have valid date strings and page numbers before mapping
     const validActivity = activityArray.filter(entry =>
         entry && typeof entry === 'object' && typeof entry.date === 'string' && typeof entry.pagesRead === 'number'
     );
 
-    // Sort activity by date to ensure chart displays chronologically
     validActivity.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return {
@@ -316,7 +289,7 @@ const Dashboard = () => {
            return new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         } catch (e) {
             console.error("Error formatting date for chart:", entry.date, e);
-            return 'Invalid Date'; // Fallback for invalid dates
+            return 'Invalid Date';
         }
       }),
       datasets: [
@@ -330,9 +303,9 @@ const Dashboard = () => {
         },
       ],
     };
-  }, [readingActivity]); // Regenerate only when readingActivity changes
+  }, [readingActivity]); // Dependency is local state
 
-   // Memoize chart options as they don't depend on dynamic data
+   // Chart options remain the same, memoized
   const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
@@ -380,7 +353,7 @@ const Dashboard = () => {
           font: {
             size: window.innerWidth < 576 ? 8 : 10,
           },
-          precision: 0 // Ensure integer ticks for page count
+          precision: 0
         },
       },
       x: {
@@ -394,16 +367,17 @@ const Dashboard = () => {
           font: {
             size: window.innerWidth < 576 ? 8 : 10,
           },
-          autoSkip: true, // Automatically skip labels if too many
-          maxTicksLimit: window.innerWidth < 576 ? 7 : 15 // Limit the number of ticks
+          autoSkip: true,
+          maxTicksLimit: window.innerWidth < 576 ? 7 : 15
         },
       },
     },
-  }), []); // Empty dependency array means memoize once
+  }), []);
+
 
   const joinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    : 'May 2025'; // Fallback date
+    : 'May 2025';
 
   return (
     <>
@@ -651,7 +625,6 @@ const Dashboard = () => {
                         {loading ? 'Refreshing...' : 'Refresh Chart'}
                       </button>
                     </div>
-                    {/* Render chart only if data is available and not loading */}
                     {!loading && chartData.labels.length > 0 ? (
                        <Line data={chartData} options={chartOptions} />
                     ) : (
