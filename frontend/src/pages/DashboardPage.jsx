@@ -5,7 +5,7 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { clearSearchResults } from '../redux/searchSlice';
 import { setBooks, setProgressUpdated, setUserStats } from '../redux/bookSlice';
-import { logout } from '../redux/authSlice';
+import { logout, updateUser } from '../redux/authSlice';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/Navbar';
@@ -64,7 +64,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [readingActivity, setReadingActivity] = useState([]);
   const [dailyQuote, setDailyQuote] = useState(getDailyQuote());
-  const [hasAvatarError, setHasAvatarError] = useState(false);
 
   const { isAuthenticated, user, books, stats } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
@@ -75,20 +74,25 @@ const Dashboard = () => {
 
   const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
 
-  const formatAvatarUrl = (avatarPath) => {
-    if (!avatarPath) return null;
-    if (avatarPath.startsWith('/uploads/')) {
-      return `${API_URL}${avatarPath}`;
-    }
-    return avatarPath;
-  };
-
   const fetchData = async () => {
     setLoading(true);
     try {
+      // Fetch user data
+      const shouldFetchUser = !user || books.progressUpdated;
+      if (shouldFetchUser) {
+        const resUser = await api.get('/users/me');
+        console.log('User data fetched from /api/users/me:', resUser.data);
+        if (resUser.data.success && resUser.data.user) {
+          dispatch(updateUser(resUser.data.user));
+        } else {
+          throw new Error('Invalid user data response');
+        }
+      }
+
       const shouldFetchBooks = !books.lastFetched || (Date.now() - books.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchBooks) {
         const resBooks = await api.get('/books');
+        console.log('Books data fetched from /api/books:', resBooks.data);
         const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
       }
@@ -96,6 +100,7 @@ const Dashboard = () => {
       const shouldFetchStats = !stats.lastFetched || (Date.now() - stats.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchStats) {
         const resStats = await api.get('/users/stats');
+        console.log('Stats data fetched from /api/users/stats:', resStats.data);
         const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
         dispatch(setUserStats({ maxReadingStreak, currentStreak, totalPagesRead, totalBooksRead: completedBooks }));
       }
@@ -103,10 +108,12 @@ const Dashboard = () => {
       const shouldFetchActivity = !readingActivity.length || books.progressUpdated;
       if (shouldFetchActivity) {
         const resActivity = await api.get('/users/reading-activity');
+        console.log('Reading activity data fetched from /api/users/reading-activity:', resActivity.data);
         const activity = Array.isArray(resActivity.data?.readingActivity) ? resActivity.data.readingActivity : [];
         setReadingActivity(activity);
       }
     } catch (error) {
+      console.error('Error fetching data in Dashboard:', error.message);
       toast.error('Failed to load your data');
       setReadingActivity([]);
     } finally {
@@ -274,24 +281,24 @@ const Dashboard = () => {
           <>
             {/* Profile Info Section */}
             <div className="row mb-4">
-  <div className="col-12">
-    <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
-      <div className="me-3">
-        <FaUserCircle className="text-muted profile-avatar" />
-      </div>
-      <div className="flex-grow-1">
-        <h4 className="profile-name mb-1">{user?.name || 'User'}</h4>
-        <p className="text-muted profile-info mb-1">Member since {joinDate}</p>
-        <p className="text-muted profile-info mb-1">
-          Favorite Genre: {user?.favoriteGenre !== undefined && user?.favoriteGenre !== '' ? user.favoriteGenre : 'Not set'}
-        </p>
-        <p className="text-muted profile-info mb-0">
-          Reading Goal: {user?.readingGoal !== undefined && user.readingGoal > 0 ? `${user.readingGoal} books this year` : 'Not set'}
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
+              <div className="col-12">
+                <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
+                  <div className="me-3">
+                    <FaUserCircle className="text-muted profile-avatar" />
+                  </div>
+                  <div className="flex-grow-1">
+                    <h4 className="profile-name mb-1">{user?.name || 'User'}</h4>
+                    <p className="text-muted profile-info mb-1">Member since {joinDate}</p>
+                    <p className="text-muted profile-info mb-1">
+                      Favorite Genre: {user?.favoriteGenre !== undefined && user?.favoriteGenre !== '' ? user.favoriteGenre : 'Not set'}
+                    </p>
+                    <p className="text-muted profile-info mb-0">
+                      Reading Goal: {user?.readingGoal !== undefined && user.readingGoal > 0 ? `${user.readingGoal} books this year` : 'Not set'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Streak and Quote Section */}
             <div className="row mt-1 mt-md-5">
