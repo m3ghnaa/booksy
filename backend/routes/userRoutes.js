@@ -8,7 +8,12 @@ const upload = require('../config/multer');
 router.get('/stats', protect, getUserStats);
 router.get('/reading-activity', protect, getReadingActivity);
 router.get('/me', protect, getCurrentUser);
-router.put('/settings', protect, upload.single('avatar'), updateUserSettings);
+router.put('/settings', protect, upload.single('avatar'), (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Route /settings hit with method PUT`);
+  console.log('Request body in routes:', req.body);
+  console.log('Request file in routes:', req.file);
+  next();
+}, updateUserSettings);
 router.put('/profile', protect, updateUserProfile);
 router.delete('/avatar', protect, deleteAvatar);
 
