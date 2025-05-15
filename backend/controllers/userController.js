@@ -2,6 +2,15 @@ const Book = require('../models/Book');
 const User = require('../models/User');
 const validator = require('validator');
 
+// Allowed avatar values
+const allowedAvatars = [
+  'FaUserCircle',
+  'FaUserAstronaut',
+  'FaUserNinja',
+  'FaUserSecret',
+  'FaUserTie'
+];
+
 // Get user statistics
 const getUserStats = async (req, res) => {
   try {
@@ -72,7 +81,7 @@ const getUserStats = async (req, res) => {
 const updateUserSettings = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email, favoriteGenre, readingGoal } = req.body;
+    const { name, email, favoriteGenre, readingGoal, avatar } = req.body;
 
     // Validate inputs
     if (!name || name.trim() === '') {
@@ -86,6 +95,9 @@ const updateUserSettings = async (req, res) => {
       if (isNaN(parsedReadingGoal) || parsedReadingGoal < 0) {
         return res.status(400).json({ message: 'Reading goal must be a non-negative number' });
       }
+    }
+    if (avatar && !allowedAvatars.includes(avatar)) {
+      return res.status(400).json({ message: `Avatar must be one of: ${allowedAvatars.join(', ')}` });
     }
 
     // Check if email is taken by another user
@@ -104,6 +116,9 @@ const updateUserSettings = async (req, res) => {
     }
     if (readingGoal !== undefined && readingGoal !== '') {
       updateData.readingGoal = parseInt(readingGoal);
+    }
+    if (avatar) {
+      updateData.avatar = avatar;
     }
 
     // Update user
@@ -126,6 +141,7 @@ const updateUserSettings = async (req, res) => {
         email: updatedUser.email,
         favoriteGenre: updatedUser.favoriteGenre,
         readingGoal: updatedUser.readingGoal,
+        avatar: updatedUser.avatar, // Include avatar in response
         createdAt: updatedUser.createdAt
       }
     });
@@ -153,6 +169,7 @@ const getCurrentUser = async (req, res) => {
         email: user.email,
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal || 0,
+        avatar: user.avatar || 'FaUserCircle', // Include avatar
         createdAt: user.createdAt
       }
     });
