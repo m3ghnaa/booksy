@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-import { ClipLoader } from 'react-spinners'; // Import ClipLoader
+import { PacmanLoader } from 'react-spinners'; // Import PacmanLoader
 import { clearSearchResults } from '../redux/searchSlice';
 import { setBooks, setProgressUpdated, setUserStats } from '../redux/bookSlice';
 import { logoutUser, syncUserWithUserSlice } from '../redux/authSlice';
@@ -313,9 +313,9 @@ const Dashboard = () => {
       <div className="container d-flex flex-column min-vh-100 mt-5 pt-5">
         {loading ? (
           <div className="d-flex flex-column justify-content-center align-items-center min-vh-100">
-            <ClipLoader
+            <PacmanLoader
               color="#007bff" // Bootstrap primary color for consistency
-              size={50}
+              size={40} // Increased size to make strokes appear thicker
               aria-label="Loading Spinner"
               data-testid="loader"
             />

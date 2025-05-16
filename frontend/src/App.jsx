@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ClipLoader } from 'react-spinners'; // Import ClipLoader
+import { ClimbingBoxLoader } from 'react-spinners'; // Import ClimbingBoxLoader
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import Dashboard from './pages/DashboardPage';
@@ -63,9 +63,9 @@ const App = () => {
   if (!isAuthInitialized) {
     return (
       <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
-        <ClipLoader
-          color="#007bff" 
-          size={50}
+        <ClimbingBoxLoader
+          color="#007bff" // Bootstrap primary color for consistency
+          size={20} // Increased size to make strokes appear thicker
           aria-label="Loading Spinner"
           data-testid="loader"
         />
