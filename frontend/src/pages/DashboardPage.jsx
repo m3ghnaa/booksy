@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
@@ -84,6 +84,7 @@ const DashboardPage = () => {
   const [readingActivity, setReadingActivity] = useState([]);
   const [dailyQuote, setDailyQuote] = useState(getDailyQuote());
   const [isLoggingOut, setIsLoggingOut] = useState(false); // Track logout state
+  const abortControllerRef = useRef(null); // Ref to store abort controller
 
   const { isAuthenticated, authUser, userProfile, books, stats } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
@@ -96,12 +97,20 @@ const DashboardPage = () => {
   const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
 
   const fetchData = async () => {
-    if (!isAuthenticated || isLoggingOut) return; // Skip if not authenticated or logging out
+    // Double-check authentication and logging out status
+    if (!isAuthenticated || isLoggingOut) {
+      console.log('Skipping fetchData - User not authenticated or is logging out');
+      return;
+    }
+
+    // Create a new abort controller for this fetch operation
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
     setLoading(true);
     try {
       // Always fetch user data on page load to ensure latest data
-      const resUser = await api.get('/users/me');
+      const resUser = await api.get('/users/me', { signal });
       console.log('User data fetched from /api/users/me:', resUser.data);
       if (resUser.data.success && resUser.data.user) {
         dispatch(syncUserWithUserSlice(resUser.data.user));
@@ -112,7 +121,7 @@ const DashboardPage = () => {
 
       const shouldFetchBooks = !books.lastFetched || (Date.now() - books.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchBooks) {
-        const resBooks = await api.get('/books');
+        const resBooks = await api.get('/books', { signal });
         console.log('Books data fetched from /api/books:', resBooks.data);
         const { currentlyReading = [], wantToRead = [], finishedReading = [] } = resBooks.data;
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
@@ -121,7 +130,7 @@ const DashboardPage = () => {
       // Fixed condition to use stats.lastFetched instead of books.lastFetched
       const shouldFetchStats = !stats.lastFetched || (Date.now() - stats.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchStats) {
-        const resStats = await api.get('/users/stats');
+        const resStats = await api.get('/users/stats', { signal });
         console.log('Stats data fetched from /api/users/stats:', resStats.data);
         const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
         dispatch(setUserStats({ maxReadingStreak, currentStreak, totalPagesRead, totalBooksRead: completedBooks }));
@@ -131,18 +140,27 @@ const DashboardPage = () => {
 
       const shouldFetchActivity = !readingActivity.length || books.progressUpdated;
       if (shouldFetchActivity) {
-        const resActivity = await api.get('/users/reading-activity');
+        const resActivity = await api.get('/users/reading-activity', { signal });
         console.log('Reading activity data fetched from /api/users/reading-activity:', resActivity.data);
         const activity = Array.isArray(resActivity.data?.readingActivity) ? resActivity.data.readingActivity : [];
         setReadingActivity(activity);
       }
     } catch (error) {
+      // Skip error toasts if we're aborting on purpose or logging out
+      if (error.name === 'AbortError' || isLoggingOut) {
+        console.log('Fetch operation aborted or user is logging out');
+        return;
+      }
+      
       console.error('Error fetching data in Dashboard:', error.message);
       toast.error('Failed to load your data');
       setReadingActivity([]);
     } finally {
-      setLoading(false);
-      dispatch(setProgressUpdated(false));
+      // Only update states if not aborting or logging out
+      if (!signal.aborted && !isLoggingOut) {
+        setLoading(false);
+        dispatch(setProgressUpdated(false));
+      }
     }
   };
 
@@ -151,16 +169,30 @@ const DashboardPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!isAuthenticated || isLoggingOut) {
-      if (!isAuthenticated) navigate('/login');
+    // Early return if not authenticated or logging out
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
+    if (isLoggingOut) {
+      console.log('Skipping data fetch during logout');
       return;
     }
 
-    const controller = new AbortController();
+    // Create and store abort controller
+    abortControllerRef.current = new AbortController();
+    
+    // Fetch data
     fetchData();
 
+    // Cleanup function to abort any pending requests when component unmounts
+    // or when dependencies change
     return () => {
-      controller.abort(); // Cancel requests on unmount
+      if (abortControllerRef.current) {
+        console.log('Aborting any pending fetch requests');
+        abortControllerRef.current.abort();
+      }
     };
   }, [isAuthenticated, books.progressUpdated, dispatch, navigate, isLoggingOut]);
 
@@ -172,17 +204,23 @@ const DashboardPage = () => {
   }, []);
 
   const handleLogout = () => {
-    setIsLoggingOut(true); // Set flag to prevent fetchData during logout
+    // Set logging out state first to prevent any further API calls
+    setIsLoggingOut(true);
+    
+    // Abort any pending requests
+    if (abortControllerRef.current) {
+      console.log('Aborting requests due to logout');
+      abortControllerRef.current.abort();
+    }
+    
+    // Clear data before dispatching logout
+    dispatch(setBooks({ currentlyReading: [], wantToRead: [], finishedReading: [] }));
+    dispatch(setUserStats({ maxReadingStreak: 0, currentStreak: 0, totalPagesRead: 0, totalBooksRead: 0 }));
+    setReadingActivity([]);
+    
+    // Now dispatch logout and navigate
     dispatch(logoutUser());
     navigate('/login');
-
-    // Defer state cleanup to avoid re-renders that trigger useEffect
-    setTimeout(() => {
-      dispatch(setBooks({ currentlyReading: [], wantToRead: [], finishedReading: [] }));
-      dispatch(setUserStats({ maxReadingStreak: 0, currentStreak: 0, totalPagesRead: 0, totalBooksRead: 0 }));
-      setReadingActivity([]);
-      setIsLoggingOut(false); // Reset flag after cleanup
-    }, 0);
   };
 
   const handleRefresh = () => {
