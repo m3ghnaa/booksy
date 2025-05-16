@@ -44,7 +44,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
   if (isAuthPage) {
     return (
       <nav className="navbar px-4 shadow" style={{ backgroundColor: '#f8f9fa', minHeight: '80px' }}>
-        <Link className="navbar-brand fw-bold tracking-wide fs-3" to="/dashboard" style={{ fontFamily: "'Cinzel', serif", color: '#008080' }}>
+        <Link className="navbar-brand fw-bold" to="/dashboard" style={{ fontFamily: "'Cinzel', serif", color: '#008080' }}>
           <div className="d-flex align-items-center">
             <FaBook className="me-2 brand-icon" size={24} />
             Booksy
@@ -73,6 +73,9 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           }
           .navbar-brand {
             font-family: "'Cinzel', serif" !important;
+            font-size: 2rem !important; /* Larger font size for brand name */
+            letter-spacing: 2px !important; /* Add letter spacing */
+            text-transform: uppercase !important; /* Capitalize the brand name */
           }
           .nav-link,
           .dropdown-item {
