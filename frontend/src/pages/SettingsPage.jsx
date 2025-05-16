@@ -23,7 +23,7 @@ const genres = [
 
 // Avatar options with styles
 const avatarOptions = [
-  { icon: FaUserCircle, name: 'FaUserCircle', style: { color: '#007bff', backgroundColor: '#e7f1ff', borderColor: '#007bff' } },
+  { icon: FaUserCircle, name: 'FaUserCircle', style: { color: '#008080', backgroundColor: '#e7f1ff', borderColor: '#008080' } }, 
   { icon: FaUserAstronaut, name: 'FaUserAstronaut', style: { color: '#ff5733', backgroundColor: '#ffe7e3', borderColor: '#ff5733' } },
   { icon: FaUserNinja, name: 'FaUserNinja', style: { color: '#28a745', backgroundColor: '#e6f4ea', borderColor: '#28a745' } },
   { icon: FaUserSecret, name: 'FaUserSecret', style: { color: '#6f42c1', backgroundColor: '#f3e8ff', borderColor: '#6f42c1' } },
@@ -40,7 +40,7 @@ const SettingsPage = () => {
     email: '',
     favoriteGenre: '',
     readingGoal: '',
-    avatar: '' // Add avatar to formData
+    avatar: ''
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -57,7 +57,7 @@ const SettingsPage = () => {
         email: user.email || '',
         favoriteGenre: user.favoriteGenre || '',
         readingGoal: user.readingGoal || '',
-        avatar: user.avatar || 'FaUserCircle' // Default to FaUserCircle if no avatar is set
+        avatar: user.avatar || 'FaUserCircle'
       });
     }
   }, [isAuthenticated, user, navigate]);
@@ -114,7 +114,7 @@ const SettingsPage = () => {
         email: formData.email,
         favoriteGenre: formData.favoriteGenre,
         ...(readingGoalNum >= 1 && { readingGoal: readingGoalNum }),
-        avatar: formData.avatar // Include avatar in the payload
+        avatar: formData.avatar
       };
       console.log('SettingsPage: Sending payload to /api/users/settings:', payload);
       const response = await api.put('/users/settings', payload);
@@ -164,6 +164,21 @@ const SettingsPage = () => {
           }
           .avatar-icon {
             font-size: 2rem;
+          }
+          /* Custom teal button style to override btn-primary */
+          .btn-teal {
+            background-color: #008080 !important;
+            border-color: #008080 !important;
+            color: #fff !important;
+          }
+          .btn-teal:hover {
+            background-color: #006666 !important; /* Darker teal on hover */
+            border-color: #006666 !important;
+          }
+          .btn-teal:disabled {
+            background-color: #00808080 !important; /* Lighter teal when disabled */
+            border-color: #00808080 !important;
+            opacity: 0.65;
           }
         `}
       </style>
@@ -249,7 +264,7 @@ const SettingsPage = () => {
             />
             {errors.readingGoal && <div className="invalid-feedback">{errors.readingGoal}</div>}
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="btn btn-teal" disabled={loading}>
             {loading ? 'Saving...' : 'Save Settings'}
           </button>
         </form>

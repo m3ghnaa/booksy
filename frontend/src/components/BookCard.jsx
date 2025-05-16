@@ -264,137 +264,157 @@ const BookCard = ({ book, onAddBook, category }) => {
   };
 
   return (
-    <div className="col-md-4 mb-4">
-      <div className="card h-100 shadow-sm">
-        <div className="row g-0">
-          <div className="col-md-4">
-            <img
-              src={thumbnail}
-              className="img-fluid rounded-start h-100 object-fit-cover"
-              alt={title}
-              style={{ maxHeight: '200px' }}
-            />
-          </div>
-          <div className="col-md-8">
-            <div className="card-body">
-              <h5 className="card-title">{title}</h5>
-              <p className="card-text">
-                <small className="text-muted">{authors.join(', ')}</small>
-              </p>
-              <p className="card-text">
-                <small>Pages: {pageCount}</small>
-              </p>
+    <>
+      <style>
+        {`
+          .btn-confirm {
+            border-color: #008080 !important; /* Teal border */
+            color: #008080 !important; /* Teal text */
+            background-color: transparent !important; /* No background */
+          }
+          .btn-confirm:hover {
+            border-color: #006666 !important; /* Darker teal on hover */
+            color: #006666 !important; /* Darker teal text on hover */
+            background-color: #f0f0f0 !important; /* Light gray background on hover */
+          }
+          .btn-confirm:disabled {
+            border-color: #00808080 !important; /* Lighter teal when disabled */
+            color: #00808080 !important; /* Lighter teal text when disabled */
+            opacity: 0.65;
+          }
+        `}
+      </style>
+      <div className="col-md-4 mb-4">
+        <div className="card h-100 shadow-sm">
+          <div className="row g-0">
+            <div className="col-md-4">
+              <img
+                src={thumbnail}
+                className="img-fluid rounded-start h-100 object-fit-cover"
+                alt={title}
+                style={{ maxHeight: '200px' }}
+              />
+            </div>
+            <div className="col-md-8">
+              <div className="card-body">
+                <h5 className="card-title">{title}</h5>
+                <p className="card-text">
+                  <small className="text-muted">{authors.join(', ')}</small>
+                </p>
+                <p className="card-text">
+                  <small>Pages: {pageCount}</small>
+                </p>
 
-              {isInReadingList && !isSearchResult && category === "currentlyReading" && (
-                <div className="mt-3">
-                  <label htmlFor={`progress-type-${bookId}`}>Progress Type: </label>
-                  <select
-                    id={`progress-type-${bookId}`}
-                    className="form-select form-select-sm mb-2"
-                    value={progressType}
-                    onChange={handleProgressTypeChange}
-                    disabled={!book.pageCount || book.pageCount === 'N/A'}
-                  >
-                    <option value="percentage">Percentage</option>
-                    <option value="pages">Pages</option>
-                  </select>
-
-                  <label htmlFor={`progress-${bookId}`}>
-                    {progressType === 'percentage' ? 'Progress (%):' : 'Pages Read:'}
-                  </label>
-                  <div className="input-group">
-                    <input
-                      type="number"
-                      id={`progress-${bookId}`}
-                      min="0"
-                      max={progressType === 'percentage' ? 100 : (book.pageCount || 100)}
-                      step="1"
-                      value={inputProgress}
-                      onChange={handleInputProgressChange}
-                      onKeyDown={handleKeyDown}
-                      className="form-control"
+                {isInReadingList && !isSearchResult && category === "currentlyReading" && (
+                  <div className="mt-3">
+                    <label htmlFor={`progress-type-${bookId}`}>Progress Type: </label>
+                    <select
+                      id={`progress-type-${bookId}`}
+                      className="form-select form-select-sm mb-2"
+                      value={progressType}
+                      onChange={handleProgressTypeChange}
                       disabled={!book.pageCount || book.pageCount === 'N/A'}
-                    />
-                    <button
-                      className="btn"
-                      type="button"
-                      onClick={handleConfirmProgress}
-                      disabled={!book.pageCount || book.pageCount === 'N/A'}
-                      style={{ backgroundColor: "#008080", color: "white" }}
                     >
-                      Confirm
-                    </button>
-                  </div>
+                      <option value="percentage">Percentage</option>
+                      <option value="pages">Pages</option>
+                    </select>
 
-                  {progressType === 'percentage' && (
-                    <div className="progress mt-2">
-                      <div
-                        className="progress-bar"
-                        role="progressbar"
-                        style={{ width: `${progress}%` }}
-                        aria-valuenow={progress}
-                        aria-valuemin="0"
-                        aria-valuemax="100"
+                    <label htmlFor={`progress-${bookId}`}>
+                      {progressType === 'percentage' ? 'Progress (%):' : 'Pages Read:'}
+                    </label>
+                    <div className="input-group">
+                      <input
+                        type="number"
+                        id={`progress-${bookId}`}
+                        min="0"
+                        max={progressType === 'percentage' ? 100 : (book.pageCount || 100)}
+                        step="1"
+                        value={inputProgress}
+                        onChange={handleInputProgressChange}
+                        onKeyDown={handleKeyDown}
+                        className="form-control"
+                        disabled={!book.pageCount || book.pageCount === 'N/A'}
+                      />
+                      <button
+                        className="btn btn-confirm"
+                        type="button"
+                        onClick={handleConfirmProgress}
+                        disabled={!book.pageCount || book.pageCount === 'N/A'}
                       >
-                        {Math.round(progress)}%
-                      </div>
+                        Confirm
+                      </button>
                     </div>
+
+                    {progressType === 'percentage' && (
+                      <div className="progress mt-2">
+                        <div
+                          className="progress-bar"
+                          role="progressbar"
+                          style={{ width: `${progress}%` }}
+                          aria-valuenow={progress}
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                        >
+                          {Math.round(progress)}%
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="card-footer bg-white">
+            <div className="d-flex justify-content-between flex-wrap">
+              {isSearchResult ? (
+                <>
+                  {!isInReadingList ? (
+                    <>
+                      <select
+                        className="form-select form-select-sm mb-1"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                      >
+                        <option value="currentlyReading">Currently Reading</option>
+                        <option value="wantToRead">Want to Read</option>
+                        <option value="finishedReading">Finished Reading</option>
+                      </select>
+                      <button
+                        className="btn btn-sm mb-1"
+                        onClick={() => onAddBook(book, status)}
+                        style={{ backgroundColor: "#008080", color: "white" }}
+                      >
+                        <i className="bi bi-book"></i> Add to Shelf
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-success w-100 text-center">Book added to your shelf!</span>
                   )}
-                </div>
+                </>
+              ) : (
+                <>
+                  <select
+                    className="form-select form-select-sm mb-1"
+                    value={status}
+                    onChange={handleStatusChange}
+                  >
+                    <option value="currentlyReading">Currently Reading</option>
+                    <option value="wantToRead">Want to Read</option>
+                    <option value="finishedReading">Finished Reading</option>
+                  </select>
+                  <button
+                    className="btn btn-outline-danger btn-sm mb-1"
+                    onClick={handleRemoveBook}
+                  >
+                    <i className="bi bi-trash"></i> Remove
+                  </button>
+                </>
               )}
             </div>
           </div>
         </div>
-        <div className="card-footer bg-white">
-          <div className="d-flex justify-content-between flex-wrap">
-            {isSearchResult ? (
-              <>
-                {!isInReadingList ? (
-                  <>
-                    <select
-                      className="form-select form-select-sm mb-1"
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                    >
-                      <option value="currentlyReading">Currently Reading</option>
-                      <option value="wantToRead">Want to Read</option>
-                      <option value="finishedReading">Finished Reading</option>
-                    </select>
-                    <button
-                      className="btn btn-sm mb-1"
-                      onClick={() => onAddBook(book, status)}
-                      style={{ backgroundColor: "#008080", color: "white" }}
-                    >
-                      <i className="bi bi-book"></i> Add to Shelf
-                    </button>
-                  </>
-                ) : (
-                  <span className="text-success w-100 text-center">Book added to your shelf!</span>
-                )}
-              </>
-            ) : (
-              <>
-                <select
-                  className="form-select form-select-sm mb-1"
-                  value={status}
-                  onChange={handleStatusChange}
-                >
-                  <option value="currentlyReading">Currently Reading</option>
-                  <option value="wantToRead">Want to Read</option>
-                  <option value="finishedReading">Finished Reading</option>
-                </select>
-                <button
-                  className="btn btn-outline-danger btn-sm mb-1"
-                  onClick={handleRemoveBook}
-                >
-                  <i className="bi bi-trash"></i> Remove
-                </button>
-              </>
-            )}
-          </div>
-        </div>
       </div>
-    </div>
+    </>
   );
 };
 
