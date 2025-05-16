@@ -274,7 +274,11 @@ const Dashboard = () => {
           }
 
           @media (max-width: 576px) {
-            .responsive-card { height: 100px !important; min-height: 100px !important; padding: 10px !important; }
+            .responsive-card { 
+              height: 100px !important; 
+              min-height: 100px !important; 
+              padding: 15px !important; /* Increased padding for breathing room */
+            }
             .responsive-card h6 { font-size: 0.8rem !important; }
             .responsive-card p { font-size: 0.85rem !important; margin-bottom: 0 !important; }
             .responsive-card h5 { font-size: 1rem !important; margin-top: 5px !important; }
@@ -282,18 +286,35 @@ const Dashboard = () => {
             .profile-avatar { width: 60px !important; height: 60px !important; }
             .profile-name { font-size: 1.2rem !important; }
             .profile-info { font-size: 0.85rem !important; margin-bottom: 2px !important; }
-            .responsive-card .position-absolute { top: -15px !important; width: 30px !important; height: 30px !important; }
+            .responsive-card .position-absolute { 
+              top: -15px !important; 
+              width: 30px !important; 
+              height: 30px !important; /* Smaller badge size */
+            }
             .responsive-card .position-absolute .text-muted,
             .responsive-card .position-absolute .text-teal,
             .responsive-card .position-absolute .text-success,
-            .responsive-card .position-absolute .text-danger { font-size: 1.2rem !important; }
-            .responsive-card .position-absolute span { font-size: 1.5rem !important; }
+            .responsive-card .position-absolute .text-danger { 
+              font-size: 1rem !important; /* Smaller icon size (24px) */
+            }
+            .responsive-card .position-absolute span { font-size: 1.2rem !important; }
             .card.p-3 { padding: 10px !important; }
             .avatar-option { width: 60px !important; height: 60px !important; }
             .avatar-icon { font-size: 2rem !important; }
+            /* Summary stats section adjustments */
+            .summary-stats .col-12 { 
+              margin-bottom: 20px !important; /* Increased margin between stacked cards */
+            }
+            .summary-stats .col-12:last-child { 
+              margin-bottom: 0 !important; /* No extra margin for the last card */
+            }
           }
           @media (min-width: 576px) and (max-width: 768px) {
-            .responsive-card { height: 110px !important; min-height: 110px !important; padding: 15px !important; }
+            .responsive-card { 
+              height: 110px !important; 
+              min-height: 110px !important; 
+              padding: 18px !important; /* Slightly more padding */
+            }
             .responsive-card h6 { font-size: 0.85rem !important; }
             .responsive-card p { font-size: 0.9rem !important; margin-bottom: 2px !important; }
             .responsive-card h5 { font-size: 1.05rem !important; margin-top: 8px !important; }
@@ -301,15 +322,27 @@ const Dashboard = () => {
             .profile-avatar { width: 80px !important; height: 80px !important; }
             .profile-name { font-size: 1.5rem !important; }
             .profile-info { font-size: 0.9rem !important; margin-bottom: 3px !important; }
-            .responsive-card .position-absolute { top: -18px !important; width: 36px !important; height: 36px !important; }
+            .responsive-card .position-absolute { 
+              top: -18px !important; 
+              width: 36px !important; 
+              height: 36px !important; /* Slightly smaller badge */
+            }
             .responsive-card .position-absolute .text-muted,
-            .responsive-card .position-absolute .text-teal,
             .responsive-card .position-absolute .text-success,
-            .responsive-card .position-absolute .text-danger { font-size: 1.4rem !important; }
-            .responsive-card .position-absolute span { font-size: 1.8rem !important; }
+            .responsive-card .position-absolute .text-danger { 
+              font-size: 1.2rem !important; /* Icon size 28px */
+            }
+            .responsive-card .position-absolute span { font-size: 1.5rem !important; }
             .card.p-3 { padding: 15px !important; }
             .avatar-option { width: 80px !important; height: 80px !important; }
             .avatar-icon { font-size: 2.5rem !important; }
+            /* Summary stats section adjustments */
+            .summary-stats .col-12 { 
+              margin-bottom: 15px !important; /* Margin between stacked cards */
+            }
+            .summary-stats .col-12:last-child { 
+              margin-bottom: 0 !important; 
+            }
           }
           @media (min-width: 769px) {
             .responsive-card { padding: 20px !important; }
@@ -317,9 +350,13 @@ const Dashboard = () => {
             .responsive-card .position-absolute .text-muted,
             .responsive-card .position-absolute .text-teal,
             .responsive-card .position-absolute .text-success,
-            .responsive-card .position-absolute .text-danger { font: 1.6rem; }
+            .responsive-card .position-absolute .text-danger { font-size: 1.4rem; /* Icon size 32px */ }
             .responsive-card .position-absolute span { font-size: 2rem; }
             .card.p-3 { padding: 20px; }
+            /* Summary stats section adjustments */
+            .summary-stats .col-12 { 
+              margin-bottom: 0 !important; /* No extra margin needed for side-by-side layout */
+            }
           }
         `}
       </style>
@@ -413,29 +450,29 @@ const Dashboard = () => {
             </div>
 
             {/* Summary Stats Section */}
-            <div className="row mt-1 mt-sm-3 mt-md-5 mb-3">
+            <div className="row mt-1 mt-sm-3 mt-md-5 mb-3 summary-stats">
               <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaBook className="text-primary" size={32} /> 
+                    <FaBook className="text-primary" /> 
                   </div>
                   <h6 className="text-muted mb-1 text-center pt-3">Total Books Read</h6>
                   <h5 className="text-muted text-center pt-1">{stats.totalBooksRead || 0}</h5>
                 </div>
               </div>
-              <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0 mt-sm-3">
+              <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaFileAlt className="text-success" size={32} />
+                    <FaFileAlt className="text-success" />
                   </div>
                   <h6 className="text-muted mb-1 text-center pt-3">Total Pages Read</h6>
                   <h5 className="text-muted text-center pt-1">{stats.totalPagesRead || 0}</h5>
                 </div>
               </div>
-              <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0 mt-sm-3">
+              <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaFire className="text-danger" size={32} />
+                    <FaFire className="text-danger" />
                   </div>
                   <h6 className="text-muted mb-1 text-center pt-3">Longest Streak</h6>
                   <h5 className="text-muted text-center pt-1">{stats.maxReadingStreak || 0} {stats.maxReadingStreak === 1 ? 'day' : 'days'}</h5>
