@@ -75,7 +75,6 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           .navbar-brand {
             font-family: "'Cinzel', serif" !important;
             font-size: 1.2rem !important; /* Larger font size for brand name */
-            text-transform: uppercase !important; /* Capitalize the brand name */
           }
           .nav-link,
           .dropdown-item {
