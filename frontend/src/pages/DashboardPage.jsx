@@ -239,24 +239,24 @@ const Dashboard = () => {
           .responsive-card p { font-size: 1rem; }
           .responsive-card h5 { font-size: 1.1rem; }
           .chart-container { height: 350px; width: 100%; position: relative; }
-          .profile-avatar { width: 100px; height: 100px; }
+          .profile-avatar { width: 60px; height: 60px; }
           .profile-name { font-size: 1.8rem; }
           .profile-info { font-size: 1rem; }
 
-          /* Avatar styling (same as SettingsPage.jsx) */
-          .avatar-option {
+          /* Avatar styling scoped to the dashboard profile section */
+          .dashboard-profile .avatar-option {
             padding: 10px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            width: 100px;
-            height: 100px;
+            width: 60px;
+            height: 60px;
             border: 1px solid;
           }
-          .avatar-icon {
-            font-size: 3rem; /* Adjusted for Dashboard size */
+          .dashboard-profile .avatar-icon {
+            font-size: 2rem;
           }
 
           /* Custom teal class to override Bootstrap primary */
@@ -299,8 +299,8 @@ const Dashboard = () => {
             }
             .responsive-card .position-absolute span { font-size: 1.2rem !important; }
             .card.p-3 { padding: 10px !important; }
-            .avatar-option { width: 60px !important; height: 60px !important; }
-            .avatar-icon { font-size: 2rem !important; }
+            .dashboard-profile .avatar-option { width: 60px !important; height: 60px !important; }
+            .dashboard-profile .avatar-icon { font-size: 2rem !important; }
             /* Summary stats section adjustments */
             .summary-stats .col-12 { 
               margin-bottom: 20px !important; /* Increased margin between stacked cards */
@@ -319,7 +319,7 @@ const Dashboard = () => {
             .responsive-card p { font-size: 0.9rem !important; margin-bottom: 2px !important; }
             .responsive-card h5 { font-size: 1.05rem !important; margin-top: 8px !important; }
             .chart-container { height: 300px !important; }
-            .profile-avatar { width: 80px !important; height: 80px !important; }
+            .profile-avatar { width: 60px !important; height: 60px !important; }
             .profile-name { font-size: 1.5rem !important; }
             .profile-info { font-size: 0.9rem !important; margin-bottom: 3px !important; }
             .responsive-card .position-absolute { 
@@ -334,8 +334,8 @@ const Dashboard = () => {
             }
             .responsive-card .position-absolute span { font-size: 1.5rem !important; }
             .card.p-3 { padding: 15px !important; }
-            .avatar-option { width: 80px !important; height: 80px !important; }
-            .avatar-icon { font-size: 2.5rem !important; }
+            .dashboard-profile .avatar-option { width: 60px !important; height: 60px !important; }
+            .dashboard-profile .avatar-icon { font-size: 2rem !important; }
             /* Summary stats section adjustments */
             .summary-stats .col-12 { 
               margin-bottom: 15px !important; /* Margin between stacked cards */
@@ -349,7 +349,7 @@ const Dashboard = () => {
             .responsive-card .position-absolute { top: -20px; width: 40px; height: 40px; }
             .responsive-card .position-absolute .text-muted,
             .responsive-card .position-absolute .text-teal,
-            .responsive-card .position-absolute .text-primary, /* Added to ensure FaBook icon size consistency */
+            .responsive-card .position-absolute .text-primary,
             .responsive-card .position-absolute .text-success,
             .responsive-card .position-absolute .text-danger { font-size: 1.4rem; /* Icon size 32px */ }
             .responsive-card .position-absolute span { font-size: 2rem; }
@@ -359,9 +359,9 @@ const Dashboard = () => {
               margin-bottom: 0 !important; /* No extra margin needed for side-by-side layout */
             }
             /* Profile avatar adjustments for large screens */
-            .profile-avatar { width: 120px !important; height: 120px !important; }
-            .avatar-option { width: 120px !important; height: 120px !important; }
-            .avatar-icon { font-size: 3.5rem !important; }
+            .profile-avatar { width: 80px !important; height: 80px !important; }
+            .dashboard-profile .avatar-option { width: 80px !important; height: 80px !important; }
+            .dashboard-profile .avatar-icon { font-size: 2.5rem !important; }
           }
         `}
       </style>
@@ -385,7 +385,7 @@ const Dashboard = () => {
             <div className="row mb-4">
               <div className="col-12">
                 <div className="card p-3 shadow-sm d-flex flex-row align-items-center">
-                  <div className="me-3">
+                  <div className="me-3 dashboard-profile">
                     <div
                       className="avatar-option profile-avatar"
                       style={{
