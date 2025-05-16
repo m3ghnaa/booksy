@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ClipLoader } from 'react-spinners'; // Import ClipLoader
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import Dashboard from './pages/DashboardPage';
@@ -60,7 +61,19 @@ const App = () => {
   }, [dispatch]);
 
   if (!isAuthInitialized) {
-    return <div className="container mt-5">Loading...</div>;
+    return (
+      <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
+        <ClipLoader
+          color="#007bff" 
+          size={50}
+          aria-label="Loading Spinner"
+          data-testid="loader"
+        />
+        <p className="mt-3 text-muted text-center">
+          Initializing authentication... Please wait.
+        </p>
+      </div>
+    );
   }
 
   return (
