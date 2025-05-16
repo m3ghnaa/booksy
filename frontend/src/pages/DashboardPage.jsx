@@ -115,12 +115,15 @@ const Dashboard = () => {
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
       }
 
-      const shouldFetchStats = !stats.lastFetched || (Date.now() - books.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
+      // Fixed condition to use stats.lastFetched instead of books.lastFetched
+      const shouldFetchStats = !stats.lastFetched || (Date.now() - stats.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchStats) {
         const resStats = await api.get('/users/stats');
         console.log('Stats data fetched from /api/users/stats:', resStats.data);
         const { maxReadingStreak = 0, currentStreak = 0, totalPagesRead = 0, completedBooks = 0 } = resStats.data;
         dispatch(setUserStats({ maxReadingStreak, currentStreak, totalPagesRead, totalBooksRead: completedBooks }));
+      } else {
+        console.log('Stats fetch skipped. Current stats:', stats);
       }
 
       const shouldFetchActivity = !readingActivity.length || books.progressUpdated;
@@ -145,6 +148,8 @@ const Dashboard = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    // Log initial stats state for debugging
+    console.log('Initial stats state on render:', stats);
     if (!isAuthenticated) {
       navigate('/login');
       return;
@@ -416,7 +421,7 @@ const Dashboard = () => {
             <div className="row mt-1 mt-md-5">
               <div className="col-12 col-sm-6 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
-                  <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
+                  <div className="position-absolute start-50 translate-middle-x bg-light Rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
                     <span>🔥</span>
                   </div>
                   <h6 className="text-muted mb-1 text-center pt-3">Current Streak</h6>
