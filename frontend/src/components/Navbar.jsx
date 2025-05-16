@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { FaUserCircle, FaBook, FaUserAstronaut, FaUserNinja, FaUserSecret, FaUserTie } from 'react-icons/fa';
-
 
 // Avatar options with styles (same as SettingsPage.jsx and Dashboard.jsx)
 const avatarOptions = [
@@ -14,9 +13,8 @@ const avatarOptions = [
 
 const Navbar = ({ user, onLogout, isAuthPage = false }) => {
   const [avatarSrc, setAvatarSrc] = useState(user?.avatar || null);
-
-  // State to hold the selected avatar component and style
   const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     // Handle avatar URL for uploaded images
@@ -42,43 +40,43 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
   const AvatarIcon = selectedAvatar ? selectedAvatar.icon : FaUserCircle;
   const avatarStyle = selectedAvatar ? selectedAvatar.style : { color: '#008080' };
 
-  if (isAuthPage) {
-    return (
-      <nav className="navbar px-4 shadow" style={{ backgroundColor: '#f8f9fa', minHeight: '80px' }}>
-        <Link className="navbar-brand fw-bold" to="/dashboard" style={{ fontFamily: "'Cinzel', serif", color: '#008080' }}>
-          <div className="d-flex align-items-center">
-            <FaBook className="me-2 brand-icon" size={24} />
-            Booksy
-          </div>
-        </Link>
-      </nav>
-    );
-  }
-
   return (
     <>
       <style>
         {`
-          /* Increase navbar height and style */
+          /* Consistent Navbar styling */
           .navbar {
-            min-height: 70px !important;
+            min-height: ${isAuthPage ? '80px' : '70px'} !important;
             background-color: #f8f9fa !important; /* Light background */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow */
           }
 
-          /* Teal text color for all nav links and brand */
-          .navbar-brand,
+          /* Consistent brand styling */
+          .navbar-brand {
+            font-family: 'Cinzel', serif !important;
+            font-size: 1.2rem !important;
+            color: #008080 !important; /* Teal text */
+            font-weight: bold !important;
+          }
+          .navbar-brand:hover {
+            color: #006666 !important; /* Darker teal on hover */
+          }
+
+          /* Style the brand icon */
+          .brand-icon {
+            color: #008080 !important; /* Teal icon */
+            filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.3));
+            transition: transform 0.3s ease, filter 0.3s ease !important;
+          }
+          .brand-icon:hover {
+            transform: scale(1.2) !important; /* Slight scale on hover */
+          }
+
+          /* Teal text color for all nav links and dropdown items */
           .nav-link,
           .dropdown-item {
             color: #008080 !important; /* Teal text */
-          }
-          .navbar-brand {
-            font-family: "'Cinzel', serif" !important;
-            font-size: 1.2rem !important; /* Larger font size for brand name */
-          }
-          .nav-link,
-          .dropdown-item {
-            font-family: "'Montserrat', sans-serif" !important;
+            font-family: 'Montserrat', sans-serif !important;
           }
 
           /* Hover effects for nav links and dropdown items */
@@ -86,16 +84,6 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           .dropdown-item:hover {
             color: #006666 !important; /* Darker teal on hover */
             background-color: #e9ecef !important; /* Light gray background on hover */
-          }
-
-          /* Style the brand icon */
-          .brand-icon {
-            color: #008080 !important; /* Teal icon */
-            filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.3)); /* Shadow for elevation */
-            transition: transform 0.3s ease, filter 0.3s ease !important;
-          }
-          .brand-icon:hover {
-            transform: scale(1.2) !important; /* Slight scale on hover */
           }
 
           /* Style the avatar */
@@ -151,122 +139,124 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           }
         `}
       </style>
-      <nav className="fixed-top rounded-bottom navbar navbar-expand-lg px-4 shadow">
-        <Link className="navbar-brand fw-bold" to="/dashboard">
+      <nav className={`navbar navbar-expand-lg px-4 shadow ${!isAuthPage ? 'fixed-top rounded-bottom' : ''}`}>
+        <Link className="navbar-brand" to={isAuthPage ? "/" : "/dashboard"}>
           <div className="d-flex align-items-center">
             <FaBook className="me-2 brand-icon" size={24} />
             Booksy
           </div>
         </Link>
 
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
+        {!isAuthPage && (
+          <>
+            <button
+              className="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarNav"
+              aria-controls="navbarNav"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
 
-        <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
-          <ul className="navbar-nav align-items-center">
-            <li className="nav-item">
-              <Link
-                className="nav-link px-3"
-                to="/search"
-              >
-                Search
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                className="nav-link px-3"
-                to="/shelf"
-              >
-                Shelf
-              </Link>
-            </li>
+            <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
+              <ul className="navbar-nav align-items-center">
+                <li className="nav-item">
+                  <NavLink className="nav-link px-3" to="/search">
+                    Search
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link px-3" to="/shelf">
+                    Shelf
+                  </NavLink>
+                </li>
 
-            {user ? (
-              <>
-                {/* Dropdown for larger screens */}
-                <li className="nav-item dropdown d-none d-lg-block">
-                  <a
-                    className="nav-link dropdown-toggle d-flex align-items-center"
-                    href="#"
-                    id="userDropdown"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    {avatarSrc ? (
-                      <img
-                        src={avatarSrc}
-                        alt="User Avatar"
-                        className="rounded-circle me-2"
-                        height="24" /* Reduced to match new avatar size */
-                        onError={() => setAvatarSrc(null)}
-                      />
-                    ) : (
-                      <div
-                        className="avatar-option me-2"
-                        style={{
-                          color: avatarStyle.color,
-                          backgroundColor: avatarStyle.backgroundColor,
-                          borderColor: avatarStyle.borderColor,
-                          border: `1px solid ${avatarStyle.borderColor}`
-                        }}
+                {isAuthenticated ? (
+                  <>
+                    {/* Dropdown for larger screens */}
+                    <li className="nav-item dropdown d-none d-lg-block">
+                      <a
+                        className="nav-link dropdown-toggle d-flex align-items-center"
+                        href="#"
+                        id="userDropdown"
+                        role="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
                       >
-                        <AvatarIcon className="avatar-icon" />
-                      </div>
-                    )}
-                    {user.name}
-                  </a>
-                  <ul className="dropdown-menu dropdown-menu-end rounded shadow" aria-labelledby="userDropdown">
-                    <li>
-                      <Link
-                        className="dropdown-item"
-                        to="/settings"
-                      >
-                        Settings
-                      </Link>
+                        {avatarSrc ? (
+                          <img
+                            src={avatarSrc}
+                            alt="User Avatar"
+                            className="rounded-circle me-2"
+                            height="24"
+                            onError={() => setAvatarSrc(null)}
+                          />
+                        ) : (
+                          <div
+                            className="avatar-option me-2"
+                            style={{
+                              color: avatarStyle.color,
+                              backgroundColor: avatarStyle.backgroundColor,
+                              borderColor: avatarStyle.borderColor,
+                              border: `1px solid ${avatarStyle.borderColor}`
+                            }}
+                          >
+                            <AvatarIcon className="avatar-icon" />
+                          </div>
+                        )}
+                        {user.name}
+                      </a>
+                      <ul className="dropdown-menu dropdown-menu-end rounded shadow" aria-labelledby="userDropdown">
+                        <li>
+                          <NavLink className="dropdown-item" to="/settings">
+                            Settings
+                          </NavLink>
+                        </li>
+                        <li>
+                          <button className="dropdown-item text-danger" onClick={onLogout || (() => {})}>
+                            Logout
+                          </button>
+                        </li>
+                      </ul>
                     </li>
-                    <li>
+
+                    {/* Links for smaller screens (no dropdown, no profile name/avatar) */}
+                    <li className="nav-item d-lg-none">
+                      <NavLink className="nav-link" to="/settings">
+                        Settings
+                      </NavLink>
+                    </li>
+                    <li className="nav-item d-lg-none">
                       <button
-                        className="dropdown-item text-danger"
-                        onClick={onLogout}
+                        className="nav-link text-danger"
+                        onClick={onLogout || (() => {})}
+                        style={{ background: 'none', border: 'none', padding: 0 }}
                       >
                         Logout
                       </button>
                     </li>
-                  </ul>
-                </li>
-
-                {/* Links for smaller screens (no dropdown, no profile name/avatar) */}
-                <li className="nav-item d-lg-none">
-                  <Link
-                    className="nav-link"
-                    to="/settings"
-                  >
-                    Settings
-                  </Link>
-                </li>
-                <li className="nav-item d-lg-none">
-                  <button
-                    className="nav-link text-danger"
-                    onClick={onLogout}
-                    style={{ background: 'none', border: 'none', padding: 0 }}
-                  >
-                    Logout
-                  </button>
-                </li>
-              </>
-            ) : null}
-          </ul>
-        </div>
+                  </>
+                ) : (
+                  <>
+                    <li className="nav-item">
+                      <NavLink className="nav-link px-3" to="/login">
+                        Login
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
+                      <NavLink className="nav-link px-3" to="/signup">
+                        Signup
+                      </NavLink>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
+          </>
+        )}
       </nav>
     </>
   );
