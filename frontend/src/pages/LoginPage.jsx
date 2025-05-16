@@ -97,14 +97,14 @@ const LoginPage = () => {
     <>
       <style>
         {`
-          /* Center the entire page content */
+          /* Page container */
           .page-container {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 0 1rem;
-            background-color: #f8f9fa; /* Light background */
+            background-color: #fff; /* White background */
           }
 
           /* Brand styling */
@@ -114,24 +114,31 @@ const LoginPage = () => {
           }
           .navbar-brand {
             font-family: 'Cinzel', serif !important;
-            font-size: 1.5rem !important; /* Slightly larger for prominence */
+            font-size: 1.5rem !important;
             color: #008080 !important; /* Teal */
             font-weight: bold !important;
             text-decoration: none;
+            text-transform: lowercase; /* Lowercase brand name */
           }
           .navbar-brand:hover {
             color: #006666 !important; /* Darker teal on hover */
           }
           .brand-icon {
-            color: #008080 !important;
+            color: #333 !important; /* Dark gray icon */
             filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.3));
             transition: transform 0.3s ease, filter 0.3s ease !important;
           }
           .brand-icon:hover {
             transform: scale(1.2) !important;
           }
+          .brand-tagline {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+          }
 
-          /* Main content layout for desktop */
+          /* Main content layout */
           .main-content {
             display: flex;
             justify-content: space-between;
@@ -144,12 +151,12 @@ const LoginPage = () => {
           /* Form styling */
           .login-form-container {
             width: 100%;
-            max-width: 400px; /* Slightly wider form */
+            max-width: 400px;
           }
           .login-form-card {
             padding: 2rem;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
             background-color: #fff;
           }
           .login-form-card h3 {
@@ -183,7 +190,7 @@ const LoginPage = () => {
             font-size: 0.875rem;
           }
           .btn-primary {
-            background-color: #008080 !important; /* Teal */
+            background-color: #008080 !important;
             border-color: #008080 !important;
             font-family: 'Montserrat', sans-serif;
             font-weight: 500;
@@ -191,7 +198,7 @@ const LoginPage = () => {
             transition: background-color 0.3s ease;
           }
           .btn-primary:hover {
-            background-color: #006666 !important; /* Darker teal */
+            background-color: #006666 !important;
             border-color: #006666 !important;
           }
           .btn-primary:disabled {
@@ -213,7 +220,8 @@ const LoginPage = () => {
 
           /* Google button and separator */
           .google-login-container {
-            text-align: center;
+            display: flex;
+            justify-content: center;
             margin-top: 1.5rem;
           }
           .separator {
@@ -230,10 +238,20 @@ const LoginPage = () => {
             text-decoration: underline;
           }
 
+          /* Footer styling */
+          .footer {
+            margin-top: auto;
+            padding: 1rem 0;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.875rem;
+            color: #666;
+          }
+
           /* Desktop layout */
           @media (min-width: 768px) {
             .page-container {
-              justify-content: center;
+              justify-content: space-between;
             }
             .main-content {
               flex-direction: row;
@@ -257,6 +275,7 @@ const LoginPage = () => {
             .illustration-container {
               max-width: 100%;
               margin-bottom: 1rem;
+              order: -1; /* Move illustration to top */
             }
             .illustration-container img {
               border-bottom-left-radius: 50%;
@@ -273,14 +292,24 @@ const LoginPage = () => {
         `}
       </style>
       <div className="page-container">
-        {/* Brand Name with Icon */}
+        {/* Illustration (Mobile: Top, Desktop: Right) */}
+        <div className="illustration-container">
+          <img
+            src="/login-image.png"
+            alt="Reading Illustration"
+            className="illustration-img"
+          />
+        </div>
+
+        {/* Brand Name with Icon and Tagline */}
         <div className="brand-container">
           <a href="/" className="navbar-brand">
             <div className="d-flex align-items-center justify-content-center">
               <FaBook className="me-2 brand-icon" size={24} />
-              Booksy
+              booksy
             </div>
           </a>
+          <div className="brand-tagline">Your Personal Library</div>
         </div>
 
         {/* Main Content */}
@@ -327,8 +356,8 @@ const LoginPage = () => {
               {error && <div className="text-red-500 mt-2 text-center">{error}</div>}
             </div>
 
-             {/* Sign Up Link */}
-             <p className="mt-3 text-center">
+            {/* Sign Up Link */}
+            <p className="mt-3 text-center">
               Don’t have an account? <a href="/signup" className="signup-link">Sign up</a>
             </p>
 
@@ -345,16 +374,12 @@ const LoginPage = () => {
               />
             </div>
           </div>
-
-          {/* Illustration (Mobile: Top, Desktop: Right) */}
-          <div className="illustration-container">
-            <img
-              src="/login-image.png"
-              alt="Reading Illustration"
-              className="illustration-img"
-            />
-          </div>
         </div>
+
+        {/* Footer */}
+        <footer className="footer">
+          © 2025 booksy. All rights reserved.
+        </footer>
       </div>
     </>
   );
