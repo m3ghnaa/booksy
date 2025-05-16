@@ -285,15 +285,6 @@ const LoginPage = () => {
 
         {/* Main Content */}
         <div className="main-content">
-          {/* Illustration (Mobile: Top, Desktop: Right) */}
-          <div className="illustration-container">
-            <img
-              src="./public/login-image.png"
-              alt="Reading Illustration"
-              className="illustration-img"
-            />
-          </div>
-
           {/* Login Form */}
           <div className="login-form-container">
             <div className="login-form-card">
@@ -336,6 +327,11 @@ const LoginPage = () => {
               {error && <div className="text-red-500 mt-2 text-center">{error}</div>}
             </div>
 
+             {/* Sign Up Link */}
+             <p className="mt-3 text-center">
+              Don’t have an account? <a href="/signup" className="signup-link">Sign up</a>
+            </p>
+
             {/* Separator and Google Sign-In Button */}
             <hr className="separator" />
             <div className="google-login-container">
@@ -348,11 +344,15 @@ const LoginPage = () => {
                 }}
               />
             </div>
+          </div>
 
-            {/* Sign Up Link */}
-            <p className="mt-3 text-center">
-              Don’t have an account? <a href="/signup" className="signup-link">Sign up</a>
-            </p>
+          {/* Illustration (Mobile: Top, Desktop: Right) */}
+          <div className="illustration-container">
+            <img
+              src="/login-image.png"
+              alt="Reading Illustration"
+              className="illustration-img"
+            />
           </div>
         </div>
       </div>
