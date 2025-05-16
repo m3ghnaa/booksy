@@ -382,7 +382,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="col-12 col-sm-6 text-center">
-                <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
+                <div className="border border-muted p-2 pb-3 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
                     <FaQuoteLeft className="text-muted" />
                   </div>
@@ -413,11 +413,11 @@ const Dashboard = () => {
             </div>
 
             {/* Summary Stats Section */}
-            <div className="row mt-1 mt-md-5">
+            <div className="row mt-1 mt-md-5 mb-3">
               <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaBook className="text-teal" /> 
+                    <FaBook className="text-primary" size={32} /> 
                   </div>
                   <h6 className="text-muted mb-1 text-center pt-3">Total Books Read</h6>
                   <h5 className="text-muted text-center pt-1">{stats.totalBooksRead || 0}</h5>
@@ -426,7 +426,7 @@ const Dashboard = () => {
               <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaFileAlt className="text-success" />
+                    <FaFileAlt className="text-success" size={32} />
                   </div>
                   <h6 className="text-muted mb-1 text-center pt-3">Total Pages Read</h6>
                   <h5 className="text-muted text-center pt-1">{stats.totalPagesRead || 0}</h5>
@@ -435,7 +435,7 @@ const Dashboard = () => {
               <div className="col-12 col-sm-4 text-center">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaFire className="text-danger" />
+                    <FaFire className="text-danger" size={32} />
                   </div>
                   <h6 className="text-muted mb-1 text-center pt-3">Longest Streak</h6>
                   <h5 className="text-muted text-center pt-1">{stats.maxReadingStreak || 0} {stats.maxReadingStreak === 1 ? 'day' : 'days'}</h5>
