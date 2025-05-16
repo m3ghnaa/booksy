@@ -316,10 +316,11 @@ const BookCard = ({ book, onAddBook, category }) => {
                       disabled={!book.pageCount || book.pageCount === 'N/A'}
                     />
                     <button
-                      className="btn btn-outline-primary"
+                      className="btn"
                       type="button"
                       onClick={handleConfirmProgress}
                       disabled={!book.pageCount || book.pageCount === 'N/A'}
+                      style={{ backgroundColor: "#008080", color: "white" }}
                     >
                       Confirm
                     </button>
@@ -360,8 +361,9 @@ const BookCard = ({ book, onAddBook, category }) => {
                       <option value="finishedReading">Finished Reading</option>
                     </select>
                     <button
-                      className="btn btn-outline-primary btn-sm mb-1"
+                      className="btn btn-sm mb-1"
                       onClick={() => onAddBook(book, status)}
+                      style={{ backgroundColor: "#008080", color: "white" }}
                     >
                       <i className="bi bi-book"></i> Add to Shelf
                     </button>

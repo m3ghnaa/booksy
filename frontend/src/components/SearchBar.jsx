@@ -51,8 +51,9 @@ const SearchBar = ({ onSearchResults }) => {
       />
       <button 
         type="submit" 
-        className="btn btn-success" 
+        className="btn" 
         disabled={loading || !query.trim()}
+        style={{ backgroundColor: "#008080", color: "white" }}
       >
         {loading ? 'Searching...' : 'Search'}
       </button>

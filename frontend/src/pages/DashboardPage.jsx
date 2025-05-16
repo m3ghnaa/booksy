@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-import { PacmanLoader } from 'react-spinners'; // Import PacmanLoader
+import { PacmanLoader } from 'react-spinners';
 import { clearSearchResults } from '../redux/searchSlice';
 import { setBooks, setProgressUpdated, setUserStats } from '../redux/bookSlice';
 import { logoutUser, syncUserWithUserSlice } from '../redux/authSlice';
@@ -24,7 +24,7 @@ const avatarIcons = {
 
 // Avatar options with styles (same as SettingsPage.jsx)
 const avatarOptions = [
-  { icon: FaUserCircle, name: 'FaUserCircle', style: { color: '#007bff', backgroundColor: '#e7f1ff', borderColor: '#007bff' } },
+  { icon: FaUserCircle, name: 'FaUserCircle', style: { color: '#008080', backgroundColor: '#e7f1ff', borderColor: '#008080' } }, 
   { icon: FaUserAstronaut, name: 'FaUserAstronaut', style: { color: '#ff5733', backgroundColor: '#ffe7e3', borderColor: '#ff5733' } },
   { icon: FaUserNinja, name: 'FaUserNinja', style: { color: '#28a745', backgroundColor: '#e6f4ea', borderColor: '#28a745' } },
   { icon: FaUserSecret, name: 'FaUserSecret', style: { color: '#6f42c1', backgroundColor: '#f3e8ff', borderColor: '#6f42c1' } },
@@ -259,6 +259,20 @@ const Dashboard = () => {
             font-size: 3rem; /* Adjusted for Dashboard size */
           }
 
+          /* Custom teal class to override Bootstrap primary */
+          .text-teal {
+            color: #008080 !important;
+          }
+          .btn-outline-teal {
+            color: #008080;
+            border-color: #008080;
+          }
+          .btn-outline-teal:hover {
+            color: #fff;
+            background-color: #008080;
+            border-color: #008080;
+          }
+
           @media (max-width: 576px) {
             .responsive-card { height: 100px !important; min-height: 100px !important; padding: 10px !important; }
             .responsive-card h6 { font-size: 0.8rem !important; }
@@ -270,7 +284,7 @@ const Dashboard = () => {
             .profile-info { font-size: 0.85rem !important; margin-bottom: 2px !important; }
             .responsive-card .position-absolute { top: -15px !important; width: 30px !important; height: 30px !important; }
             .responsive-card .position-absolute .text-muted,
-            .responsive-card .position-absolute .text-primary,
+            .responsive-card .position-absolute .text-teal,
             .responsive-card .position-absolute .text-success,
             .responsive-card .position-absolute .text-danger { font-size: 1.2rem !important; }
             .responsive-card .position-absolute span { font-size: 1.5rem !important; }
@@ -289,7 +303,7 @@ const Dashboard = () => {
             .profile-info { font-size: 0.9rem !important; margin-bottom: 3px !important; }
             .responsive-card .position-absolute { top: -18px !important; width: 36px !important; height: 36px !important; }
             .responsive-card .position-absolute .text-muted,
-            .responsive-card .position-absolute .text-primary,
+            .responsive-card .position-absolute .text-teal,
             .responsive-card .position-absolute .text-success,
             .responsive-card .position-absolute .text-danger { font-size: 1.4rem !important; }
             .responsive-card .position-absolute span { font-size: 1.8rem !important; }
@@ -301,7 +315,7 @@ const Dashboard = () => {
             .responsive-card { padding: 20px !important; }
             .responsive-card .position-absolute { top: -20px; width: 40px; height: 40px; }
             .responsive-card .position-absolute .text-muted,
-            .responsive-card .position-absolute .text-primary,
+            .responsive-card .position-absolute .text-teal,
             .responsive-card .position-absolute .text-success,
             .responsive-card .position-absolute .text-danger { font: 1.6rem; }
             .responsive-card .position-absolute span { font-size: 2rem; }
@@ -314,8 +328,8 @@ const Dashboard = () => {
         {loading ? (
           <div className="d-flex flex-column justify-content-center align-items-center min-vh-100">
             <PacmanLoader
-              color="#007bff" // Bootstrap primary color for consistency
-              size={40} // Increased size to make strokes appear thicker
+              color="#008080" 
+              size={40}
               aria-label="Loading Spinner"
               data-testid="loader"
             />
@@ -383,7 +397,7 @@ const Dashboard = () => {
               <div className="col-12">
                 <div className="card p-2 p-md-3 shadow-sm chart-container">
                   <div className="d-flex justify-content-end mb-2">
-                    <button className="btn btn-outline-primary btn-sm" onClick={handleRefresh} disabled={loading}>
+                    <button className="btn btn-outline-teal btn-sm" onClick={handleRefresh} disabled={loading}>
                       {loading ? 'Refreshing...' : 'Refresh Chart'}
                     </button>
                   </div>
@@ -403,7 +417,7 @@ const Dashboard = () => {
               <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaBook className="text-primary" />
+                    <FaBook className="text-teal" /> 
                   </div>
                   <h6 className="text-muted mb-1 text-center pt-3">Total Books Read</h6>
                   <h5 className="text-muted text-center pt-1">{stats.totalBooksRead || 0}</h5>
