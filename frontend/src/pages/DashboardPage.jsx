@@ -115,7 +115,7 @@ const Dashboard = () => {
         dispatch(setBooks({ currentlyReading, wantToRead, finishedReading }));
       }
 
-      const shouldFetchStats = !stats.lastFetched || (Date.now() - stats.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
+      const shouldFetchStats = !stats.lastFetched || (Date.now() - books.lastFetched > 5 * 60 * 1000) || books.progressUpdated;
       if (shouldFetchStats) {
         const resStats = await api.get('/users/stats');
         console.log('Stats data fetched from /api/users/stats:', resStats.data);
@@ -349,6 +349,7 @@ const Dashboard = () => {
             .responsive-card .position-absolute { top: -20px; width: 40px; height: 40px; }
             .responsive-card .position-absolute .text-muted,
             .responsive-card .position-absolute .text-teal,
+            .responsive-card .position-absolute .text-primary, /* Added to ensure FaBook icon size consistency */
             .responsive-card .position-absolute .text-success,
             .responsive-card .position-absolute .text-danger { font-size: 1.4rem; /* Icon size 32px */ }
             .responsive-card .position-absolute span { font-size: 2rem; }
@@ -357,6 +358,10 @@ const Dashboard = () => {
             .summary-stats .col-12 { 
               margin-bottom: 0 !important; /* No extra margin needed for side-by-side layout */
             }
+            /* Profile avatar adjustments for large screens */
+            .profile-avatar { width: 120px !important; height: 120px !important; }
+            .avatar-option { width: 120px !important; height: 120px !important; }
+            .avatar-icon { font-size: 3.5rem !important; }
           }
         `}
       </style>

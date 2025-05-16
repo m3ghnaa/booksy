@@ -73,7 +73,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           }
           .navbar-brand {
             font-family: "'Cinzel', serif" !important;
-            font-size: 2rem !important; /* Larger font size for brand name */
+            font-size: 1.5rem !important; /* Larger font size for brand name */
             letter-spacing: 2px !important; /* Add letter spacing */
             text-transform: uppercase !important; /* Capitalize the brand name */
           }
