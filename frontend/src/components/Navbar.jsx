@@ -43,8 +43,8 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
 
   if (isAuthPage) {
     return (
-      <nav className="navbar px-4 shadow" style={{ backgroundColor: '#f8f9fa', minHeight: '70px' }}>
-        <Link className="navbar-brand fw-bold" to="/dashboard" style={{ fontFamily: "'Cinzel', serif", color: '#008080', letterSpacing: '2px', fontSize: '34px' }}>
+      <nav className="navbar px-4 shadow" style={{ backgroundColor: '#f8f9fa', minHeight: '80px' }}>
+        <Link className="navbar-brand fw-bold tracking-wide fs-3" to="/dashboard" style={{ fontFamily: "'Cinzel', serif", color: '#008080' }}>
           <div className="d-flex align-items-center">
             <FaBook className="me-2 brand-icon" size={24} />
             Booksy
