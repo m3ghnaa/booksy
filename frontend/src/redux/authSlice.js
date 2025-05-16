@@ -95,7 +95,7 @@ const authSlice = createSlice({
 
 export const logoutUser = () => async (dispatch) => {
   try {
-    await api.get('/api/auth/logout'); 
+    await api.get('/auth/logout'); 
     toast.info('Logged out successfully');
   } catch (error) {
     console.error('logoutUser: Error during logout:', error.message);
