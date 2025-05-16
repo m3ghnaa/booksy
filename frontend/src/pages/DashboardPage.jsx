@@ -395,7 +395,7 @@ const Dashboard = () => {
             {/* Reading Activity Chart */}
             <div className="row mt-3 mt-md-5 mb-4 mb-md-4">
               <div className="col-12">
-                <div className="card p-2 p-md-3 shadow-sm chart-container">
+                <div className="card p-2 p-md-3 shadow-sm chart-container mb-3 pt-3">
                   <div className="d-flex justify-content-end mb-2">
                     <button className="btn btn-outline-teal btn-sm" onClick={handleRefresh} disabled={loading}>
                       {loading ? 'Refreshing...' : 'Refresh Chart'}
@@ -413,7 +413,7 @@ const Dashboard = () => {
             </div>
 
             {/* Summary Stats Section */}
-            <div className="row mt-1 mt-md-5 mb-3">
+            <div className="row mt-1 mt-sm-3 mt-md-5 mb-3">
               <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
@@ -423,7 +423,7 @@ const Dashboard = () => {
                   <h5 className="text-muted text-center pt-1">{stats.totalBooksRead || 0}</h5>
                 </div>
               </div>
-              <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
+              <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0 mt-sm-3">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
                     <FaFileAlt className="text-success" size={32} />
@@ -432,7 +432,7 @@ const Dashboard = () => {
                   <h5 className="text-muted text-center pt-1">{stats.totalPagesRead || 0}</h5>
                 </div>
               </div>
-              <div className="col-12 col-sm-4 text-center">
+              <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0 mt-sm-3">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
                     <FaFire className="text-danger" size={32} />

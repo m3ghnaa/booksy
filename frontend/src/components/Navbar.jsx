@@ -43,7 +43,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
 
   if (isAuthPage) {
     return (
-      <nav className="navbar px-4 shadow-sm" style={{ backgroundColor: '#f8f9fa', borderBottom: '1px solid #00808080', minHeight: '70px' }}>
+      <nav className="navbar px-4 shadow" style={{ backgroundColor: '#f8f9fa', minHeight: '70px' }}>
         <Link className="navbar-brand fw-bold" to="/dashboard" style={{ fontFamily: "'Cinzel', serif", color: '#008080' }}>
           <div className="d-flex align-items-center">
             <FaBook className="me-2 brand-icon" size={24} />
@@ -62,7 +62,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           .navbar {
             min-height: 70px !important;
             background-color: #f8f9fa !important; /* Light background */
-            border-bottom: 1px solid #00808080 !important; /* Lighter teal border */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow */
           }
 
           /* Teal text color for all nav links and brand */
@@ -70,6 +70,12 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           .nav-link,
           .dropdown-item {
             color: #008080 !important; /* Teal text */
+          }
+          .navbar-brand {
+            font-family: "'Cinzel', serif" !important;
+          }
+          .nav-link,
+          .dropdown-item {
             font-family: "'Montserrat', sans-serif" !important;
           }
 
@@ -110,7 +116,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           /* Dropdown menu styling */
           .dropdown-menu {
             background-color: #f8f9fa !important; /* Light background */
-            border: 1px solid #00808080 !important; /* Lighter teal border */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow */
           }
 
           /* Collapsed menu styling for smaller screens */
@@ -118,7 +124,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
             .navbar-collapse {
               background-color: #f8f9fa !important; /* Light background for collapsed menu */
               padding: 10px !important;
-              border-top: 1px solid #00808080 !important; /* Lighter teal border */
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow */
             }
             .navbar-nav {
               flex-direction: column !important; /* Stack items vertically */
@@ -136,10 +142,6 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
             .dropdown-toggle {
               display: none !important;
             }
-            /* Ensure avatar spacing */
-            .avatar-option {
-              margin-right: 10px !important;
-            }
           }
 
           /* Ensure navbar toggler icon is visible */
@@ -148,8 +150,8 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           }
         `}
       </style>
-      <nav className="fixed-top rounded-bottom navbar navbar-expand-lg px-4 shadow-sm">
-        <Link className="navbar-brand fw-bold" to="/dashboard" style={{ fontFamily: "'Cinzel', serif" }}>
+      <nav className="fixed-top rounded-bottom navbar navbar-expand-lg px-4 shadow">
+        <Link className="navbar-brand fw-bold" to="/dashboard">
           <div className="d-flex align-items-center">
             <FaBook className="me-2 brand-icon" size={24} />
             Booksy
@@ -222,7 +224,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
                     )}
                     {user.name}
                   </a>
-                  <ul className="dropdown-menu dropdown-menu-end rounded shadow-sm" aria-labelledby="userDropdown">
+                  <ul className="dropdown-menu dropdown-menu-end rounded shadow" aria-labelledby="userDropdown">
                     <li>
                       <Link
                         className="dropdown-item"
@@ -242,33 +244,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
                   </ul>
                 </li>
 
-                {/* Links for smaller screens (no dropdown) */}
-                <li className="nav-item d-lg-none">
-                  <div className="d-flex align-items-center nav-link">
-                    {avatarSrc ? (
-                      <img
-                        src={avatarSrc}
-                        alt="User Avatar"
-                        className="rounded-circle me-2"
-                        height="30"
-                        onError={() => setAvatarSrc(null)}
-                      />
-                    ) : (
-                      <div
-                        className="avatar-option me-2"
-                        style={{
-                          color: avatarStyle.color,
-                          backgroundColor: avatarStyle.backgroundColor,
-                          borderColor: avatarStyle.borderColor,
-                          border: `1px solid ${avatarStyle.borderColor}`
-                        }}
-                      >
-                        <AvatarIcon className="avatar-icon" />
-                      </div>
-                    )}
-                    {user.name}
-                  </div>
-                </li>
+                {/* Links for smaller screens (no dropdown, no profile name/avatar) */}
                 <li className="nav-item d-lg-none">
                   <Link
                     className="nav-link"
