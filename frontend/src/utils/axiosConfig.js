@@ -1,12 +1,10 @@
 import axios from 'axios';
 
-// Get the backend URL from environment variable or use the production URL as fallback
 const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
 
 const api = axios.create({
   baseURL: `${backendUrl}/api`,
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true // Add this to align with backend CORS
 });
 
 api.interceptors.request.use(
@@ -27,7 +25,6 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Add debug logging for errors
     console.error('API Error:', {
       status: error.response?.status,
       statusText: error.response?.statusText,

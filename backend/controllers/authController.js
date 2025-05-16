@@ -23,7 +23,7 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    console.log('User found:', { email: user.email, passwordExists: !!user.password }); // Debug log
+    console.log('User found:', { email: user.email, passwordExists: !!user.password });
 
     if (!user.password) {
       return res.status(400).json({ 
@@ -76,7 +76,7 @@ const signup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('Hashed password:', hashedPassword); // Debug log
+    console.log('Hashed password:', hashedPassword);
 
     const user = new User({
       name: name.trim(),
@@ -87,7 +87,7 @@ const signup = async (req, res) => {
     });
 
     await user.save();
-    console.log('Saved user:', { _id: user._id, email: user.email, password: user.password }); // Debug log
+    console.log('Saved user:', { _id: user._id, email: user.email, password: user.password });
 
     const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
@@ -182,7 +182,6 @@ const getCurrentUser = async (req, res) => {
 // Logout user
 const logoutUser = async (req, res) => {
   try {
-    res.clearCookie('jwt', { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
     console.log('User logged out');
     res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
