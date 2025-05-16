@@ -49,10 +49,35 @@ const ShelfPage = () => {
 
   return (
     <>
+      <style>
+        {`
+          /* Style for the active tab */
+          .nav-tabs .nav-link.active {
+            background-color: #008080 !important; /* Teal background for active tab */
+            color: #fff !important; /* White text for contrast */
+            border-color: #008080 !important; /* Teal border to match background */
+          }
+
+          /* Optional: Style for inactive tabs to ensure they look distinct */
+          .nav-tabs .nav-link {
+            color: #008080; /* Teal text for inactive tabs */
+          }
+
+          .nav-tabs .nav-link:hover {
+            color: #006666; /* Slightly darker teal on hover for inactive tabs */
+            border-color: #006666;
+          }
+
+          /* Ensure the bottom border of the tab doesn't interfere */
+          .nav-tabs {
+            border-bottom: 1px solid #008080; /* Teal border for the tab bar */
+          }
+        `}
+      </style>
       <Navbar user={profile} onLogout={handleLogout} />
       <div className="container mt-5 pt-5">
         <h4 className="text-center mb-5">{profile?.name ? `${profile.name}'s Shelf` : 'My Shelf'}</h4>
-        <Tabs id="book-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3" style={{ backgroundColor: '#008080', color: '#fff' }}>
+        <Tabs id="book-tabs" activeKey={key} onSelect={(k) => setKey(k)} className="mb-3">
           <Tab eventKey="currentlyReading" title="Currently Reading">
             <div className="row mt-3">
               {currentlyReading.length > 0 ? (
