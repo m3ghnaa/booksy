@@ -81,7 +81,9 @@ const DashboardPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [readingActivity, setReadingActivity] = useState([]);
   const [dailyQuote, setDailyQuote] = useState(getDailyQuote());
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // Track logout state
 
   const { isAuthenticated, authUser, userProfile, books, stats } = useSelector((state) => ({
     isAuthenticated: state.auth.isAuthenticated,
@@ -94,7 +96,7 @@ const DashboardPage = () => {
   const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
 
   const fetchData = async () => {
-    if (!isAuthenticated) return; // Skip if not authenticated
+    if (!isAuthenticated || isLoggingOut) return; // Skip if not authenticated or logging out
 
     setLoading(true);
     try {
@@ -127,11 +129,17 @@ const DashboardPage = () => {
         console.log('Stats fetch skipped. Current stats:', stats);
       }
 
-      // Removed the /users/reading-activity request since readingActivity is now local state
-      // and the chart has been removed from the UI
+      const shouldFetchActivity = !readingActivity.length || books.progressUpdated;
+      if (shouldFetchActivity) {
+        const resActivity = await api.get('/users/reading-activity');
+        console.log('Reading activity data fetched from /api/users/reading-activity:', resActivity.data);
+        const activity = Array.isArray(resActivity.data?.readingActivity) ? resActivity.data.readingActivity : [];
+        setReadingActivity(activity);
+      }
     } catch (error) {
       console.error('Error fetching data in Dashboard:', error.message);
       toast.error('Failed to load your data');
+      setReadingActivity([]);
     } finally {
       setLoading(false);
       dispatch(setProgressUpdated(false));
@@ -143,8 +151,8 @@ const DashboardPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
+    if (!isAuthenticated || isLoggingOut) {
+      if (!isAuthenticated) navigate('/login');
       return;
     }
 
@@ -154,7 +162,7 @@ const DashboardPage = () => {
     return () => {
       controller.abort(); // Cancel requests on unmount
     };
-  }, [isAuthenticated, books.progressUpdated, dispatch, navigate]);
+  }, [isAuthenticated, books.progressUpdated, dispatch, navigate, isLoggingOut]);
 
   useEffect(() => {
     const today = new Date().toDateString();
@@ -164,6 +172,7 @@ const DashboardPage = () => {
   }, []);
 
   const handleLogout = () => {
+    setIsLoggingOut(true); // Set flag to prevent fetchData during logout
     dispatch(logoutUser());
     navigate('/login');
 
@@ -171,6 +180,8 @@ const DashboardPage = () => {
     setTimeout(() => {
       dispatch(setBooks({ currentlyReading: [], wantToRead: [], finishedReading: [] }));
       dispatch(setUserStats({ maxReadingStreak: 0, currentStreak: 0, totalPagesRead: 0, totalBooksRead: 0 }));
+      setReadingActivity([]);
+      setIsLoggingOut(false); // Reset flag after cleanup
     }, 0);
   };
 
@@ -178,6 +189,47 @@ const DashboardPage = () => {
     dispatch(setProgressUpdated(true));
     toast.info('Refreshing data...');
   };
+
+  const chartData = useMemo(() => {
+    const validActivity = (readingActivity || [])
+      .filter(entry => entry?.date && typeof entry.pagesRead === 'number')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    return {
+      labels: validActivity.map(entry => new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+      datasets: [
+        {
+          label: 'Pages Read',
+          data: validActivity.map(entry => entry.pagesRead || 0),
+          fill: false,
+          backgroundColor: 'rgba(0, 184, 148, 0.6)',
+          borderColor: 'rgb(0, 184, 148)',
+          tension: 0.1,
+        },
+      ],
+    };
+  }, [readingActivity]);
+
+  const chartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: { bottom: 10 } },
+    plugins: {
+      legend: { position: 'top', labels: { font: { size: window.innerWidth < 576 ? 10 : 12 } } },
+      title: { display: true, text: 'Daily Reading Activity (Last 30 Days)', font: { size: window.innerWidth < 576 ? 14 : 16 } },
+      tooltip: { callbacks: { label: context => `Pages Read: ${context.raw}` } },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Pages Read', font: { size: window.innerWidth < 576 ? 10 : 12 } },
+        ticks: { font: { size: window.innerWidth < 576 ? 8 : 10 }, precision: 0 },
+      },
+      x: {
+        ticks: { font: { size: window.innerWidth < 576 ? 8 : 10 }, autoSkip: true, maxTicksLimit: window.innerWidth < 576 ? 7 : 15 },
+      },
+    },
+  }), []);
 
   const joinDate = authUser?.createdAt
     ? new Date(authUser.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -400,9 +452,26 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Removed Reading Activity Chart Section */}
-            {/* Since /users/reading-activity request is removed, the chart is no longer relevant */}
-            
+            {/* Reading Activity Chart */}
+            <div className="row mt-3 mt-md-5 mb-4 mb-md-4">
+              <div className="col-12">
+                <div className="card p-2 p-md-3 shadow-sm chart-container mb-3 pt-3">
+                  <div className="d-flex justify-content-end mb-2">
+                    <button className="btn btn-outline-teal btn-sm" onClick={handleRefresh} disabled={loading}>
+                      {loading ? 'Refreshing...' : 'Refresh Chart'}
+                    </button>
+                  </div>
+                  {chartData.labels.length > 0 ? (
+                    <Line data={chartData} options={chartOptions} />
+                  ) : (
+                    <div className="d-flex align-items-center justify-content-center h-100">
+                      <p className="text-muted">{loading ? 'Loading chart data...' : 'No reading activity data available for the last 30 days.'}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Summary Stats Section */}
             <div className="row mt-1 mt-sm-3 mt-md-5 mb-3 summary-stats">
               <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
