@@ -16,3 +16,17 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Override Bootstrap Navbar styles */
+.navbar,
+.navbar-brand,
+.nav-link,
+.navbar-text,
+.navbar-nav .nav-link,
+.navbar-toggler,
+.navbar-collapse,
+.btn {
+  font-family: 'Montserrat', 'Cinzel', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif !important;
+}
