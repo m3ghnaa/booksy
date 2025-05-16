@@ -95,12 +95,14 @@ const authSlice = createSlice({
 
 export const logoutUser = () => async (dispatch) => {
   try {
-    await api.get('/auth/logout'); 
+    await api.get('/auth/logout');
     toast.info('Logged out successfully');
   } catch (error) {
     console.error('logoutUser: Error during logout:', error.message);
     toast.error('Failed to logout on server, proceeding with client-side logout');
   } finally {
+    // Remove token from localStorage
+    localStorage.removeItem('token');
     dispatch(logout());
     dispatch(clearUserProfile());
     dispatch({

@@ -48,7 +48,6 @@ const LoginPage = () => {
 
     dispatch(loginStart());
     try {
-
       const response = await api.post('/auth/login', formData);
       const { user, token } = response.data;
 
@@ -59,6 +58,7 @@ const LoginPage = () => {
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
       console.error('Login error:', error.response?.data);
+      localStorage.removeItem('token'); // Clear token on failed login
       dispatch(loginFailure(message));
       if (message.includes('No password found')) {
         toast.error(message, {
@@ -77,16 +77,11 @@ const LoginPage = () => {
   const handleGoogleLogin = async (response) => {
     dispatch(loginStart());
     try {
-
-      // Get the backend URL from environment variable or use the production URL as fallback
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://booksy-17xg.onrender.com';
-
-      
-      // Use axios directly with the full URL to ensure we're not using localhost
       const res = await axios.post(`${backendUrl}/api/auth/google`, { token: response.credential }, {
         headers: { 'Content-Type': 'application/json' }
       });
-      
+
       const { user, token } = res.data;
 
       dispatch(loginSuccess({ user, token }));
@@ -96,6 +91,7 @@ const LoginPage = () => {
     } catch (error) {
       const message = error.response?.data?.message || 'Google login failed';
       console.error('Google login error:', error);
+      localStorage.removeItem('token'); // Clear token on failed Google login
       dispatch(loginFailure(message));
       toast.error(message);
     }
@@ -148,6 +144,7 @@ const LoginPage = () => {
             <GoogleLogin
               onSuccess={handleGoogleLogin}
               onError={() => {
+                localStorage.removeItem('token'); // Clear token on Google login error
                 dispatch(loginFailure('Google login failed'));
                 toast.error('Google login failed');
               }}
