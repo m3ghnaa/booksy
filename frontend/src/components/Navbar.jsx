@@ -73,7 +73,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           }
           .navbar-brand {
             font-family: "'Cinzel', serif" !important;
-            font-size: 1.5rem !important; /* Larger font size for brand name */
+            font-size: 1.2rem !important; /* Larger font size for brand name */
             letter-spacing: 2px !important; /* Add letter spacing */
             text-transform: uppercase !important; /* Capitalize the brand name */
           }
@@ -97,7 +97,6 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           }
           .brand-icon:hover {
             transform: scale(1.2) !important; /* Slight scale on hover */
-            filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.5)) !important; /* Stronger shadow on hover */
           }
 
           /* Style the avatar */
@@ -108,12 +107,12 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            width: 40px;
-            height: 40px;
+            width: 30px; /* Reduced size */
+            height: 30px; /* Reduced size */
             border: 1px solid;
           }
           .avatar-icon {
-            font-size: 1.8rem;
+            font-size: 1.2rem; /* Reduced icon size to fit smaller avatar */
           }
 
           /* Dropdown menu styling */
@@ -209,7 +208,7 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
                         src={avatarSrc}
                         alt="User Avatar"
                         className="rounded-circle me-2"
-                        height="30"
+                        height="24" /* Reduced to match new avatar size */
                         onError={() => setAvatarSrc(null)}
                       />
                     ) : (
