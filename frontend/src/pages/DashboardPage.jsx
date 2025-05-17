@@ -468,10 +468,8 @@ const DashboardPage = () => {
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
                     <FaQuoteLeft className="text-muted" />
                   </div>
-                  <div className="py-3">
                     <p className="text-muted mb-1 text-center pt-3" style={{ fontStyle: 'italic' }}>"{dailyQuote.text}"</p>
                     <p className="text-muted text-center">— {dailyQuote.author}, <em>{dailyQuote.book}</em></p>
-                  </div>
                 </div>
               </div>
             </div>
