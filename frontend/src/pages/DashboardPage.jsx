@@ -255,14 +255,22 @@ const DashboardPage = () => {
       <style>
         {`
           .responsive-card {
-            height: 120px;
-            min-height: 100px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-          }
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+  .quote-card {
+  height: auto !important; /* Override any height constraints */
+  min-height: 120px;
+  max-height: none !important; /* Ensure no maximum height restriction */
+  overflow: visible; /* Allow content to flow naturally */
+  padding-top: 30px !important; /* Extra space for the quote icon */
+}
+
           .responsive-card h6 { font-size: 0.9rem; }
           .responsive-card p { font-size: 1rem; }
           .responsive-card h5 { font-size: 1.1rem; }
@@ -339,10 +347,14 @@ const DashboardPage = () => {
           }
           @media (min-width: 576px) and (max-width: 768px) {
             .responsive-card { 
-              height: 110px !important; 
-              min-height: 110px !important; 
-              padding: 18px !important; /* Slightly more padding */
-            }
+    min-height: 110px !important; 
+    padding: 18px !important;
+  }
+  .quote-card {
+    min-height: 130px !important;
+    padding-top: 35px !important;
+    padding-bottom: 25px !important;
+  }
             .responsive-card h6 { font-size: 0.85rem !important; }
             .responsive-card p { font-size: 0.9rem !important; margin-bottom: 2px !important; }
             .responsive-card h5 { font-size: 1.05rem !important; margin-top: 8px !important; }
@@ -452,7 +464,7 @@ const DashboardPage = () => {
                 </div>
               </div>
               <div className="col-12 col-sm-6 text-center">
-                <div className="border border-muted p-2 pb-3 p-md-3 position-relative shadow-sm responsive-card">
+                <div className="border border-muted p-2 pb-3 p-md-3 position-relative shadow-sm responsive-card quote-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
                     <FaQuoteLeft className="text-muted" />
                   </div>
