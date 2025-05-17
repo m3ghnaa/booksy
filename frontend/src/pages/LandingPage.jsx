@@ -9,32 +9,18 @@ const LandingPage = () => {
     <div className="d-flex flex-column min-vh-100">
       <style>
         {`
-          /* Global responsive styles */
-          .btn {
-            border-radius: 0 !important;
-            background-color: #000000 !important;
-            border-color: #000000 !important;
-          }
-          .btn-outline-light {
-            color: #ffffff !important;
-            background-color: transparent !important;
-            border-color: #ffffff !important;
-          }
-          .btn-light {
-            color: #000000 !important;
-            background-color: #ffffff !important;
-            border-color: #ffffff !important;
-          }
-          .btn-primary {
-            color: #ffffff !important;
-          }
-          
-          /* Responsive card styles */
+         
+         /* Responsive card styles */
           .feature-section {
             display: flex;
             align-items: center;
             min-height: 50vh;
           }
+            .btn {
+              background-color: #008080 !important;
+              border-radius: 5px !important;
+              border: none !important;
+            }
           
           /* Mobile styles */
           @media (max-width: 576px) {
@@ -139,7 +125,7 @@ const LandingPage = () => {
       </style>
 
       {/* Header Section */}
-      <header className="text-white text-center py-5 px-4 shadow-sm" style={{ backgroundColor: '#000000', borderBottom: '1px solid #ffffff' }}>
+      <header className="text-white text-center py-5 px-4 shadow-sm" style={{ backgroundColor: '#008080', borderBottom: '1px solid #ffffff' }}>
         <Container>
           <h3 className="fw-bold header-title" style={{ fontFamily: "'Cinzel', serif", color: '#ffffff' }}>
             <div className="d-flex align-items-center justify-content-center">
@@ -150,14 +136,6 @@ const LandingPage = () => {
           <p className="text-white header-subtitle pt-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             Your ultimate book management companion
           </p>
-          <div className="mt-4 cta-buttons">
-            <Button as={Link} to="/login" variant="light" size="lg" className="mx-2 my-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              Login
-            </Button>
-            <Button as={Link} to="/signup" variant="outline-light" size="lg" className="mx-2 my-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              Sign Up
-            </Button>
-          </div>
         </Container>
       </header>
 
@@ -214,14 +192,14 @@ const LandingPage = () => {
         <Container>
           <h3 className="mb-3">Get Started Today!</h3>
           <p className="text-muted mb-4">Discover a smarter way to track, analyze, and personalize your reading experience with Booksy!</p>
-          <Button as={Link} to="/signup" variant="primary" size="lg" className="px-4">
+          <Button as={Link} to="/signup" size="lg" className="px-4" >
             Sign Up Now
           </Button>
         </Container>
       </section>
 
       {/* Footer Section */}
-      <footer className="bg-dark text-white text-center py-3 mt-auto">
+      <footer className="text-center py-3 mt-auto base text-secondary">
         <Container fluid>
           <p className="mb-0">© 2025 Booksy.</p>
         </Container>

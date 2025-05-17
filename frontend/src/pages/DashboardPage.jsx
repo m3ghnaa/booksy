@@ -451,7 +451,7 @@ const DashboardPage = () => {
                   <h5 className="text-muted text-center pt-1">{stats.currentStreak || 0} {stats.currentStreak === 1 ? 'day' : 'days'}</h5>
                 </div>
               </div>
-              <div className="col-12 col-sm-6 text-center">
+              <div className="col-12 col-sm-6 text-center py-3">
                 <div className="border border-muted p-2 pb-3 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
                     <FaQuoteLeft className="text-muted" />
@@ -483,7 +483,7 @@ const DashboardPage = () => {
             </div>
 
             {/* Summary Stats Section */}
-            <div className="row mt-1 mt-sm-3 mt-md-5 mb-3 summary-stats">
+            <div className="row mt-2 mt-sm-3 mt-md-5 mb-3 summary-stats">
               <div className="col-12 col-sm-4 text-center mb-3 mb-sm-0">
                 <div className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
