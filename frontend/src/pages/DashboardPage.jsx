@@ -451,10 +451,10 @@ const DashboardPage = () => {
                   <h5 className="text-muted text-center pt-1">{stats.currentStreak || 0} {stats.currentStreak === 1 ? 'day' : 'days'}</h5>
                 </div>
               </div>
-              <div className="col-12 col-sm-6 text-center py-3">
+              <div className="col-12 col-sm-6 text-center">
                 <div className="border border-muted p-2 pb-3 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaQuoteLeft className="text-muted" />
+                    <FaQuoteLeft className="text-muted py-3" />
                   </div>
                   <p className="text-muted mb-1 text-center pt-3" style={{ fontStyle: 'italic' }}>"{dailyQuote.text}"</p>
                   <p className="text-muted text-center">— {dailyQuote.author}, <em>{dailyQuote.book}</em></p>
