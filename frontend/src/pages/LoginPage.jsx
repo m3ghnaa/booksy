@@ -96,273 +96,377 @@ const LoginPage = () => {
   return (
     <>
       <style>
-        {`
-          /* Page container */
-          .page-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0 1rem;
-            background-color: #fff; /* White background */
-          }
+       {`
+       /* Global background fix */
+body, html {
+  background-color: white !important;
+  margin: 0;
+  padding: 0;
+}
 
-          /* Brand styling */
-          .brand-container {
-            padding: 2rem 0;
-            text-align: center;
-          }
-          .navbar-brand {
-            font-family: 'Cinzel', serif !important;
-            font-size: 1.5rem !important;
-            color: #008080 !important; /* Teal */
-            font-weight: bold !important;
-            text-decoration: none;
-            text-transform: lowercase; /* Lowercase brand name */
-          }
-          .navbar-brand:hover {
-            color: #006666 !important; /* Darker teal on hover */
-          }
-          .brand-icon {
-            color: #333 !important; /* Dark gray icon */
-            filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.3));
-            transition: transform 0.3s ease, filter 0.3s ease !important;
-          }
-          .brand-icon:hover {
-            transform: scale(1.2) !important;
-          }
-          .brand-tagline {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 0.5rem;
-          }
+/* Page container */
+.page-container {
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: white;
+}
 
-          /* Main content layout */
-          .main-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1200px;
-            padding: 2rem 0;
-          }
+/* Main content layout */
+.main-content {
+  display: flex;
+  width: 100%;
+  max-width: 1100px;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  flex-direction: row; /* Default for large screens */
+}
 
-          /* Form styling */
-          .login-form-container {
-            width: 100%;
-            max-width: 400px;
-          }
-          .login-form-card {
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
-            background-color: #fff;
-          }
-          .login-form-card h3 {
-            font-family: 'Cinzel', serif;
-            color: #333;
-            margin-bottom: 1.5rem;
-          }
-          .form-label {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 0.5rem;
-          }
-          .form-control {
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            padding: 0.75rem;
-            font-family: 'Montserrat', sans-serif;
-            transition: border-color 0.3s ease;
-          }
-          .form-control:focus {
-            border-color: #008080;
-            box-shadow: 0 0 5px rgba(0, 128, 128, 0.3);
-            outline: none;
-          }
-          .form-control.is-invalid {
-            border-color: #dc3545;
-          }
-          .invalid-feedback {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.875rem;
-          }
-          .btn-primary {
-            background-color: #008080 !important;
-            border-color: #008080 !important;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 500;
-            padding: 0.75rem;
-            transition: background-color 0.3s ease;
-          }
-          .btn-primary:hover {
-            background-color: #006666 !important;
-            border-color: #006666 !important;
-          }
-          .btn-primary:disabled {
-            background-color: #a3bffa !important;
-            border-color: #a3bffa !important;
-            cursor: not-allowed;
-          }
+/* Form styling */
+.login-form-container {
+  width: 45%;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 
-          /* Illustration styling */
-          .illustration-container {
-            width: 100%;
-            max-width: 500px;
-          }
-          .illustration-container img {
-            width: 100%;
-            height: auto;
-            object-fit: cover;
-          }
+.login-form-header {
+  margin-bottom: 2rem;
+}
 
-          /* Google button and separator */
-          .google-login-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 1.5rem;
-          }
-          .separator {
-            margin: 1.5rem 0;
-            border-top: 1px solid #ced4da;
-          }
-          .signup-link {
-            font-family: 'Montserrat', sans-serif;
-            color: #008080;
-            text-decoration: none;
-          }
-          .signup-link:hover {
-            color: #006666;
-            text-decoration: underline;
-          }
+.login-form-header h3 {
+  font-family: 'Cinzel', serif;
+  color: #333;
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+}
 
-          /* Footer styling */
-          .footer {
-            margin-top: auto;
-            padding: 1rem 0;
-            text-align: center;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.875rem;
-            color: #666;
-          }
+.login-subheading {
+  color: #666;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+}
 
-          /* Desktop layout */
-          @media (min-width: 768px) {
-            .page-container {
-              justify-content: space-between;
-            }
-            .main-content {
-              flex-direction: row;
-              gap: 2rem;
-            }
-            .login-form-container {
-              width: 40%;
-            }
-            .illustration-container {
-              width: 50%;
-              display: block;
-            }
-          }
+.form-label {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
 
-          /* Mobile layout */
-          @media (max-width: 767.98px) {
-            .main-content {
-              flex-direction: column;
-              padding: 1rem 0;
-            }
-            .illustration-container {
-              max-width: 100%;
-              margin-bottom: 1rem;
-              order: -1; /* Move illustration to top */
-            }
-            .illustration-container img {
-              border-bottom-left-radius: 50%;
-              border-bottom-right-radius: 50%;
-              overflow: hidden;
-            }
-            .login-form-container {
-              max-width: 100%;
-            }
-            .brand-container {
-              padding: 1.5rem 0;
-            }
-          }
-        `}
+.form-control {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-family: 'Montserrat', sans-serif;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+}
+
+.form-control:focus {
+  border-color: #008080;
+  box-shadow: 0 0 0 2px rgba(0, 128, 128, 0.1);
+  background-color: #fff;
+  outline: none;
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545;
+  background-color: #fff;
+}
+
+.invalid-feedback {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.btn-primary {
+  background-color: #008080 !important;
+  border-color: #008080 !important;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 128, 128, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: #006666 !important;
+  border-color: #006666 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 128, 128, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 128, 128, 0.2);
+}
+
+.btn-primary:disabled {
+  background-color: #a3bffa !important;
+  border-color: #a3bffa !important;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Illustration styling */
+.illustration-container {
+  width: 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #e5e5e5;
+}
+
+.illustration-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+  z-index: 0;
+}
+
+/* Brand styling */
+.brand-container {
+  width: 100%;
+  text-align: center;
+  padding: 1rem 1.5rem;
+  background-color: #fff;
+  border-bottom: 1px solid rgba(229, 229, 229, 0.5);
+  /* On large screens, the brand container is inside the layout */
+  position: relative;
+}
+
+.brand-container a {
+  color: #008080 !important;
+  text-decoration: none;
+  font-size: 1.65rem !important;
+  font-weight: 500 !important;
+}
+
+.brand-container a div {
+  font-family: 'Cinzel', serif !important;
+}
+
+.brand-icon {
+  color: rgb(89, 91, 91) !important;
+  filter: drop-shadow(1px 1px 1px rgba(0, 128, 128, 0.2));
+  padding-right: 0.5rem;
+}
+
+.brand-tagline {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+  color: #666;
+  letter-spacing: 0.5px;
+  margin-top: 0.25rem;
+}
+
+/* Google button and separator */
+.google-login-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ddd;
+}
+
+.separator::before {
+  margin-right: 0.5rem;
+}
+
+.separator::after {
+  margin-left: 0.5rem;
+}
+
+.signup-link {
+  font-family: 'Montserrat', sans-serif;
+  color: #008080;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.signup-link:hover {
+  color: #006666;
+  text-decoration: underline;
+}
+
+/* Footer styling */
+.footer {
+  position: absolute;
+  bottom: -0.1rem;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  color: #888;
+  z-index: 10;
+}
+
+/* Media Queries */
+@media (max-width: 991.98px) {
+  /* Medium screens */
+  .page-container {
+    flex-direction: column;
+    padding: 0;
+  }
+  
+  .main-content {
+    flex-direction: column;
+    box-shadow: none;
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .brand-container {
+    order: 1; /* Brand on top */
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid #e5e5e5;
+    background-color: white;
+  }
+  
+  .illustration-container {
+    order: 2; /* Image second */
+    width: 100%;
+    height: 300px; /* Fixed height for better appearance */
+  }
+  
+  .login-form-container {
+    order: 3; /* Form third */
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .footer {
+    order: 4; /* Footer last */
+    position: relative;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Small screens */
+  .page-container {
+    min-height: auto;
+    padding: 0;
+  }
+  
+  .main-content {
+    border-radius: 0;
+  }
+  
+  .brand-container {
+    padding: 0.75rem 1rem;
+  }
+  
+  .illustration-container {
+    height: 220px;
+  }
+  
+  .login-form-container {
+    padding: 1.5rem;
+  }
+  
+  .footer {
+    margin-top: 1.5rem;
+  }
+}`
+}
       </style>
+   {/* Brand Container - This will be on top for medium and small screens */}
+   <div className="brand-container">
+        <a href="/">
+          <div className="d-flex align-items-center justify-content-center">
+            <FaBook className="brand-icon" />
+            booksy
+          </div>
+        </a>
+        <div className="brand-tagline">Organize Your Reading Journey</div>
+      </div>
+      
       <div className="page-container">
-        {/* Illustration (Mobile: Top, Desktop: Right) */}
-        <div className="illustration-container">
-          <img
-            src="/login-image.png"
-            alt="Reading Illustration"
-            className="illustration-img"
-          />
-        </div>
-
-        {/* Brand Name with Icon and Tagline */}
-        <div className="brand-container">
-          <a href="/" className="navbar-brand">
-            <div className="d-flex align-items-center justify-content-center">
-              <FaBook className="me-2 brand-icon" size={24} />
-              booksy
-            </div>
-          </a>
-          <div className="brand-tagline">Your Personal Library</div>
-        </div>
-
         {/* Main Content */}
         <div className="main-content">
           {/* Login Form */}
           <div className="login-form-container">
-            <div className="login-form-card">
-              <h3 className="text-center">Login</h3>
-              <form onSubmit={handleEmailLogin}>
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email address</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                    disabled={loading}
-                  />
-                  {errors.email && <div className="invalid-feedback">{errors.email}</div>}
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="password" className="form-label">Password</label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-                    disabled={loading}
-                  />
-                  {errors.password && <div className="invalid-feedback">{errors.password}</div>}
-                </div>
-                <button
-                  type="submit"
-                  className="btn btn-primary w-100"
-                  disabled={loading}
-                >
-                  {loading ? 'Logging in...' : 'Login'}
-                </button>
-              </form>
-              {error && <div className="text-red-500 mt-2 text-center">{error}</div>}
+            <div className="login-form-header">
+              <h3 style={{ fontWeight: '600' }}>Hello!</h3>
+              <p className="login-subheading">Sign in to continue to your booksy account</p>
             </div>
-
-            {/* Sign Up Link */}
-            <p className="mt-3 text-center">
-              Don’t have an account? <a href="/signup" className="signup-link">Sign up</a>
-            </p>
-
+            
+            <form onSubmit={handleEmailLogin}>
+              <div className="mb-3">
+                <label htmlFor="email" className="form-label">Email address</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                  disabled={loading}
+                  placeholder="Your email"
+                />
+                {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+              </div>
+              <div className="mb-4">
+                <label htmlFor="password" className="form-label">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                  disabled={loading}
+                  placeholder="Your password"
+                />
+                {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+              </div>
+              <button
+                type="submit"
+                className="btn btn-primary w-100"
+                disabled={loading}
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </form>
+            {error && <div className="text-danger mt-3 text-center">{error}</div>}
+            
             {/* Separator and Google Sign-In Button */}
-            <hr className="separator" />
+            <div className="separator">or continue with</div>
             <div className="google-login-container">
               <GoogleLogin
                 onSuccess={handleGoogleLogin}
@@ -373,6 +477,20 @@ const LoginPage = () => {
                 }}
               />
             </div>
+
+            {/* Sign Up Link */}
+            <p className="mt-4 text-center">
+              Don't have an account? <a href="/signup" className="signup-link">Create one</a>
+            </p>
+          </div>
+
+          {/* Illustration (right side on large screens, below brand on medium/small) */}
+          <div className="illustration-container">
+            <img
+              src="/login-image.png"
+              alt="Reading Illustration"
+              className="illustration-img"
+            />
           </div>
         </div>
 
