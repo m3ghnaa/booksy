@@ -163,10 +163,10 @@ margin-bottom: 1rem;
   margin-bottom: 2rem;
 }
 
-.signup-form-header h3 {
+.signup-form-header h4 {
   font-family: 'Cinzel', serif;
   color: #333;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   margin-bottom: 0.75rem;
 }
 
@@ -275,8 +275,8 @@ margin-bottom: 1rem;
 .brand-container a {
   color: #008080 !important;
   text-decoration: none;
-  font-size: 1.65rem !important;
-  font-weight: 500 !important;
+  font-size: 1.50rem !important;
+  font-weight: 570 !important;
 }
 
 .brand-container a div {
@@ -291,10 +291,9 @@ margin-bottom: 1rem;
 
 .brand-tagline {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   color: #666;
   letter-spacing: 0.5px;
-  margin-top: 0.25rem;
 }
 
 /* Google button and separator */
@@ -446,7 +445,7 @@ margin-bottom: 1rem;
           {/* Signup Form */}
           <div className="signup-form-container">
             <div className="signup-form-header">
-              <h3 style={{ fontWeight: '600' }}>Join booksy</h3>
+              <h4 style={{ fontWeight: '570' }}>Join booksy</h4>
               <p className="signup-subheading">Create your account to start your reading journey</p>
             </div>
             

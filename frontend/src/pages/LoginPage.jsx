@@ -139,10 +139,10 @@ body, html {
   margin-bottom: 2rem;
 }
 
-.login-form-header h3 {
+.login-form-header h4 {
   font-family: 'Cinzel', serif;
   color: #333;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   margin-bottom: 0.75rem;
 }
 
@@ -251,8 +251,8 @@ body, html {
 .brand-container a {
   color: #008080 !important;
   text-decoration: none;
-  font-size: 1.65rem !important;
-  font-weight: 500 !important;
+  font-size: 1.50rem !important;
+  font-weight: 570 !important;
 }
 
 .brand-container a div {
@@ -267,10 +267,9 @@ body, html {
 
 .brand-tagline {
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   color: #666;
   letter-spacing: 0.5px;
-  margin-top: 0.25rem;
 }
 
 /* Google button and separator */
@@ -422,7 +421,7 @@ body, html {
           {/* Login Form */}
           <div className="login-form-container">
             <div className="login-form-header">
-              <h3 style={{ fontWeight: '600' }}>Hello!</h3>
+              <h4 style={{ fontWeight: '470' }}>Hello!</h4>
               <p className="login-subheading">Sign in to continue to your booksy account</p>
             </div>
             
