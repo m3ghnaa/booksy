@@ -454,10 +454,12 @@ const DashboardPage = () => {
               <div className="col-12 col-sm-6 text-center">
                 <div className="border border-muted p-2 pb-3 p-md-3 position-relative shadow-sm responsive-card">
                   <div className="position-absolute start-50 translate-middle-x bg-light rounded-circle d-flex align-items-center justify-content-center" style={{ zIndex: 10 }}>
-                    <FaQuoteLeft className="text-muted py-3" />
+                    <FaQuoteLeft className="text-muted" />
                   </div>
-                  <p className="text-muted mb-1 text-center pt-3" style={{ fontStyle: 'italic' }}>"{dailyQuote.text}"</p>
-                  <p className="text-muted text-center">— {dailyQuote.author}, <em>{dailyQuote.book}</em></p>
+                  <div className="py-3">
+                    <p className="text-muted mb-1 text-center pt-3" style={{ fontStyle: 'italic' }}>"{dailyQuote.text}"</p>
+                    <p className="text-muted text-center">— {dailyQuote.author}, <em>{dailyQuote.book}</em></p>
+                  </div>
                 </div>
               </div>
             </div>
