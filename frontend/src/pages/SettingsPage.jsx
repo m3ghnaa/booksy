@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../utils/axiosConfig';
 import Navbar from '../components/Navbar';
-import { syncUserWithUserSlice } from '../redux/authSlice';
+import { syncUserWithUserSlice, logoutUser } from '../redux/authSlice';
 import { FaUserCircle, FaUserAstronaut, FaUserNinja, FaUserSecret, FaUserTie } from 'react-icons/fa';
 
 // Static list of genres

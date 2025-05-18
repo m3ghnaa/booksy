@@ -7,8 +7,11 @@ import api from '../utils/axiosConfig';
 import SearchBar from '../components/SearchBar';
 import BookResults from '../components/BookResults';
 import Navbar from '../components/Navbar';
+import { logoutUser } from '../redux/authSlice';
+import { useNavigate } from 'react-router-dom';
 
 const SearchPage = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { books, loading, error } = useSelector((state) => state.search);
   const { currentlyReading, wantToRead, finishedReading } = useSelector((state) => state.books);
