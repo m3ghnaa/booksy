@@ -139,6 +139,12 @@ const SettingsPage = () => {
     }
   };
 
+  const handleLogout = () => {
+      dispatch(logoutUser());
+      navigate('/login');
+      toast.info('You have logged out.');
+    };
+
   return (
     <>
       <style>

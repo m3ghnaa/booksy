@@ -77,6 +77,12 @@ const SearchPage = () => {
     }
   };
 
+  const handleLogout = () => {
+      dispatch(logoutUser());
+      navigate('/login');
+      toast.info('You have logged out.');
+    };
+
   return (
     <>
       <Navbar user={profile} />
