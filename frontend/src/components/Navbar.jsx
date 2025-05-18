@@ -77,6 +77,15 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
           .dropdown-item {
             color: #008080 !important; /* Teal text */
             font-family: 'Montserrat', sans-serif !important;
+            background-color: transparent !important; /* Ensure no background by default */
+          }
+
+          /* Override active state for nav links and dropdown items */
+          .nav-link.active,
+          .dropdown-item.active,
+          .dropdown-item:active {
+            color: #008080 !important; /* Keep teal text */
+            background-color: transparent !important; /* Remove blue background */
           }
 
           /* Hover effects for nav links and dropdown items */
@@ -113,7 +122,6 @@ const Navbar = ({ user, onLogout, isAuthPage = false }) => {
             .navbar-collapse {
               background-color: #f8f9fa !important; /* Light background for collapsed menu */
               padding: 10px !important;
-              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important; /* Enhanced shadow */
             }
             .navbar-nav {
               flex-direction: column !important; /* Stack items vertically */
