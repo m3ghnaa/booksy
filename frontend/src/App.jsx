@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { PacmanLoader } from 'react-spinners';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -19,9 +19,15 @@ import { setUserProfile, clearUserProfile } from './redux/userSlice';
 import api from './utils/axiosConfig';
 import LandingPage from './pages/LandingPage';
 
-const App = () => {
+// Component to handle routes and authentication logic
+const AppContent = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const [isAuthInitialized, setIsAuthInitialized] = useState(false);
+  const [authAttempted, setAuthAttempted] = useState(false);
+
+  // Define public routes that don't require authentication initialization
+  const publicRoutes = ['/', '/login', '/signup'];
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -54,12 +60,20 @@ const App = () => {
         dispatch(logout({ dispatch }));
         dispatch(clearUserProfile());
       }
+      setAuthAttempted(true);
       setIsAuthInitialized(true);
     };
-    initializeAuth();
-  }, [dispatch]);
 
-  if (!isAuthInitialized) {
+    // Skip auth initialization for public routes on initial load
+    if (publicRoutes.includes(location.pathname) && !authAttempted) {
+      setIsAuthInitialized(true); // Allow public routes to render immediately
+    } else if (!authAttempted) {
+      initializeAuth(); // Run auth for protected routes
+    }
+  }, [dispatch, location.pathname, authAttempted]);
+
+  // Show loading spinner only for protected routes during initialization
+  if (!isAuthInitialized && !publicRoutes.includes(location.pathname)) {
     return (
       <div className="container d-flex flex-column justify-content-center align-items-center min-vh-100">
         <PacmanLoader
@@ -76,42 +90,50 @@ const App = () => {
   }
 
   return (
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/search" element={
+          <ProtectedRoute>
+            <SearchPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/shelf" element={
+          <ProtectedRoute>
+            <ShelfPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/login" element={
+          <AuthRedirect>
+            <LoginPage />
+          </AuthRedirect>
+        } />
+        <Route path="/signup" element={
+          <AuthRedirect>
+            <SignupPage />
+          </AuthRedirect>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+      </Routes>
+      <ToastContainer />
+    </>
+  );
+};
+
+const App = () => {
+  return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <Router>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/search" element={
-            <ProtectedRoute>
-              <SearchPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/shelf" element={
-            <ProtectedRoute>
-              <ShelfPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/login" element={
-            <AuthRedirect>
-              <LoginPage />
-            </AuthRedirect>
-          } />
-          <Route path="/signup" element={
-            <AuthRedirect>
-              <SignupPage />
-            </AuthRedirect>
-          } />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-        </Routes>
-        <ToastContainer />
+        <AppContent />
       </Router>
     </GoogleOAuthProvider>
   );
