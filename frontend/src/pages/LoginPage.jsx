@@ -106,7 +106,7 @@ body, html {
 
 /* Page container */
 .page-container {
-  min-height: 90vh;
+  min-height: 80vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,6 +116,8 @@ body, html {
 
 /* Main content layout */
 .main-content {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   display: flex;
   width: 100%;
   max-width: 1100px;
@@ -218,6 +220,63 @@ body, html {
   box-shadow: none;
 }
 
+/* Header with SVG wave */
+.header-wrapper {
+  position: relative;
+  background-color: #008080;
+  height: 210px;
+}
+
+.header-content {
+  padding: 1.5rem 1rem;
+  position: relative;
+  z-index: 3;
+}
+
+.wave-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  z-index: 2;
+}
+
+/* Brand styling */
+.brand-container {
+  width: 100%;
+  text-align: center;
+  padding: 1rem 1.5rem;
+  background-color: transparent;
+  position: relative;
+  z-index: 10;
+}
+
+.brand-container a {
+  color: #fff !important;
+  text-decoration: none;
+  font-size: 1.50rem !important;
+  font-weight: 570 !important;
+}
+
+.brand-container a div {
+  font-family: 'Cinzel', serif !important;
+}
+
+.brand-icon {
+  color: #fff !important;
+  filter: drop-shadow(1px 1px 1px rgba(255, 255, 255, 0.2));
+  padding-right: 0.5rem;
+}
+
+.brand-tagline {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.5px;
+}
+
 /* Illustration styling */
 .illustration-container {
   width: 55%;
@@ -235,41 +294,6 @@ body, html {
   mix-blend-mode: multiply;
   opacity: 0.9;
   z-index: 0;
-}
-
-/* Brand styling */
-.brand-container {
-  width: 100%;
-  text-align: center;
-  padding: 1rem 1.5rem;
-  background-color: #fff;
-  border-bottom: 1px solid rgba(229, 229, 229, 0.5);
-  /* On large screens, the brand container is inside the layout */
-  position: relative;
-}
-
-.brand-container a {
-  color: #008080 !important;
-  text-decoration: none;
-  font-size: 1.50rem !important;
-  font-weight: 570 !important;
-}
-
-.brand-container a div {
-  font-family: 'Cinzel', serif !important;
-}
-
-.brand-icon {
-  color: rgb(89, 91, 91) !important;
-  filter: drop-shadow(1px 1px 1px rgba(0, 128, 128, 0.2));
-  padding-right: 0.5rem;
-}
-
-.brand-tagline {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 0.75rem;
-  color: #666;
-  letter-spacing: 0.5px;
 }
 
 /* Google button and separator */
@@ -319,7 +343,7 @@ body, html {
 /* Footer styling */
 .footer {
   position: absolute;
-  bottom: -0.1rem;
+  bottom: -0.5rem;
   left: 0;
   width: 100%;
   text-align: center;
@@ -342,15 +366,11 @@ body, html {
     box-shadow: none;
     max-width: 100%;
     width: 100%;
+    margin-top: 0;
   }
   
-  .brand-container {
-    order: 1; /* Brand on top */
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    border-bottom: 1px solid #e5e5e5;
-    background-color: white;
+  .header-wrapper {
+    order: 1; /* Header on top */
   }
   
   .illustration-container {
@@ -386,6 +406,14 @@ body, html {
     border-radius: 0;
   }
   
+  .header-wrapper {
+    height: 150px;
+  }
+  
+  .header-content {
+    padding: 1rem;
+  }
+  
   .brand-container {
     padding: 0.75rem 1rem;
   }
@@ -404,15 +432,26 @@ body, html {
 }`
 }
       </style>
-   {/* Brand Container - This will be on top for medium and small screens */}
-   <div className="brand-container">
-        <a href="/">
-          <div className="d-flex align-items-center justify-content-center">
-            <FaBook className="brand-icon" />
-            booksy
+       
+      {/* Header Section with SVG Wave */}
+      <div className="header-wrapper">
+        <div className="header-content">
+          {/* Brand Container moved inside header */}
+          <div className="brand-container">
+            <a href="/">
+              <div className="d-flex align-items-center justify-content-center">
+                <FaBook className="brand-icon" />
+                booksy
+              </div>
+            </a>
+            <div className="brand-tagline">Organize Your Reading Journey</div>
           </div>
-        </a>
-        <div className="brand-tagline">Organize Your Reading Journey</div>
+        </div>
+        <div className="wave-container">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+            <path fill="#ffffff" fillOpacity="1" d="M0,256L80,245.3C160,235,320,213,480,224C640,235,800,277,960,256C1120,235,1280,149,1360,106.7L1440,64L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+          </svg>
+        </div>
       </div>
       
       <div className="page-container">

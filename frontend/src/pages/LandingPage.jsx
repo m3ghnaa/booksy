@@ -9,18 +9,40 @@ const LandingPage = () => {
     <div className="d-flex flex-column min-vh-100">
       <style>
         {`
-         
          /* Responsive card styles */
           .feature-section {
             display: flex;
             align-items: center;
-            min-height: 50vh;
+            min-height: 30vh;
           }
-            .btn {
-              background-color: #008080 !important;
-              border-radius: 5px !important;
-              border: none !important;
-            }
+          .btn {
+            background-color: #008080 !important;
+            border-radius: 5px !important;
+            border: none !important;
+          }
+          
+          /* Header with SVG wave */
+          .header-wrapper {
+            position: relative;
+            background-color: #008080;
+                      }
+          
+          .header-content {
+            padding: 3rem 1rem;
+            position: relative;
+            z-index: 3;
+            
+          }
+          
+          .wave-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+            z-index: 2;
+          }
           
           /* Mobile styles */
           @media (max-width: 576px) {
@@ -30,6 +52,9 @@ const LandingPage = () => {
               margin-bottom: 1.5rem;
               overflow: visible !important; /* Prevent icon clipping */
             }
+              img {
+              width: 100% !important;
+              }
             .responsive-card h5 {
               font-size: 1rem !important;
             }
@@ -67,6 +92,12 @@ const LandingPage = () => {
               padding-top: 35px !important; /* Increased to accommodate icon */
               position: relative !important;
             }
+            .header-content {
+              padding: 2rem 1rem 4rem;
+            }
+            .header-wrapper {
+              height: 200px;
+            }
           }
           
           /* Tablet styles */
@@ -76,6 +107,10 @@ const LandingPage = () => {
               min-height: 150px !important; /* Increased for medium screens */
               margin-bottom: 1.5rem;
               overflow: visible !important; /* Prevent icon clipping */
+            }
+
+            img {
+              width: 100% !important;
             }
             .responsive-card h5 {
               font-size: 1.05rem !important;
@@ -100,6 +135,12 @@ const LandingPage = () => {
             .card-body-with-icon {
               padding-top: 35px !important;
             }
+            .header-content {
+              padding: 2.5rem 1rem 5rem;
+            }
+            .header-wrapper {
+              height: 230px;
+            }
           }
           
           /* Larger screens */
@@ -120,29 +161,46 @@ const LandingPage = () => {
             .card-body-with-icon {
               padding-top: 30px !important;
             }
+            .header-content {
+              padding: 3rem 1rem 6rem;
+            }
+               .header-wrapper {
+              height: 250px;
+            }
           }
         `}
       </style>
 
-      {/* Header Section */}
-      <header className="text-white text-center py-5 px-4 shadow-sm" style={{ backgroundColor: '#008080', borderBottom: '1px solid #ffffff' }}>
-        <Container>
-          <h3 className="fw-bold header-title" style={{ fontFamily: "'Cinzel', serif", color: '#ffffff' }}>
-            <div className="d-flex align-items-center justify-content-center">
-              <FaBook className="me-2" style={{ color: '#ffffff' }} size={30} />
-              <span className="header-title-text">Welcome to Booksy</span>
-            </div>
-          </h3>
-          <p className="text-white header-subtitle pt-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-            Your ultimate book management companion
-          </p>
-        </Container>
-      </header>
+      {/* Header Section with SVG Wave */}
+      <div className="header-wrapper text-white text-center">
+        <div className="header-content">
+          <Container>
+            <h3 className="fw-bold header-title" style={{ fontFamily: "'Cinzel', serif", color: '#ffffff' }}>
+              <div className="d-flex align-items-center justify-content-center">
+                <FaBook className="me-2" style={{ color: '#ffffff' }} size={30} />
+                <span className="header-title-text">Welcome to Booksy</span>
+              </div>
+            </h3>
+            <p className="text-white header-subtitle pt-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Your ultimate book management companion
+            </p>
+          </Container>
+        </div>
+        <div className="wave-container">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+            <path fill="#ffffff" fillOpacity="1" d="M0,256L80,245.3C160,235,320,213,480,224C640,235,800,277,960,256C1120,235,1280,149,1360,106.7L1440,64L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+          </svg>
+        </div>
+      </div>
+
+      <Container>
+        <img src="landing-page.png" alt="Landing Page" className="img-fluid mx-auto d-block" style={{ width: '70%', height: 'auto' }} />
+      </Container>
 
       {/* Features Section */}
-      <section className="py-5 feature-section mt-5">
+      <section className="feature-section mt-2 py-4">
         <Container>
-            <h2 className="text-center mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}></h2>
+          <h2 className="text-center mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}></h2>
           <Row className="d-flex align-items-stretch">
             <Col xs={12} md={4} className="mb-4 d-flex">
               <Card className="border border-muted p-2 p-md-3 position-relative shadow-sm responsive-card w-100 text-center">
@@ -150,7 +208,7 @@ const LandingPage = () => {
                   <FaBook className="text-black" style={{ fontSize: '1.6rem' }} />
                 </div>
                 <Card.Body className="pt-4 d-flex flex-column justify-content-center card-body-with-icon">
-                  <Card.Title as="h5" className="text-muted mb-1" style={{ fontSize: '1.1rem' }}>Track Your Books</Card.Title>
+                  <Card.Title as="h5" className="mb-2" style={{ fontSize: '1.1rem', color: '#008080' }}>Track Your Books</Card.Title>
                   <Card.Text className="text-muted" style={{ fontSize: '0.9rem' }}>
                     Easily add, manage, and track all the books you're reading or plan to read.
                   </Card.Text>
@@ -163,7 +221,7 @@ const LandingPage = () => {
                   <FaChartLine className="text-black" style={{ fontSize: '1.6rem' }} />
                 </div>
                 <Card.Body className="pt-4 d-flex flex-column justify-content-center card-body-with-icon">
-                  <Card.Title as="h5" className="text-muted mb-1" style={{ fontSize: '1.1rem' }}>View Stats</Card.Title>
+                  <Card.Title as="h5" className="mb-2" style={{ fontSize: '1.1rem', color: '#008080' }}>View Stats</Card.Title>
                   <Card.Text className="text-muted" style={{ fontSize: '0.9rem' }}>
                     Get insights into your reading habits with detailed statistics and charts.
                   </Card.Text>
@@ -176,7 +234,7 @@ const LandingPage = () => {
                   <FaUserCircle className="text-black" style={{ fontSize: '1.6rem' }} />
                 </div>
                 <Card.Body className="pt-4 d-flex flex-column justify-content-center card-body-with-icon">
-                  <Card.Title as="h5" className="text-muted mb-1" style={{ fontSize: '1.1rem' }}>Personalize Your Profile</Card.Title>
+                  <Card.Title as="h5" className="mb-2" style={{ fontSize: '1.1rem', color: '#008080' }}>Personalize Your Profile</Card.Title>
                   <Card.Text className="text-muted" style={{ fontSize: '0.9rem' }}>
                     Upload an avatar and customize your settings to make Booksy your own.
                   </Card.Text>
@@ -192,7 +250,7 @@ const LandingPage = () => {
         <Container>
           <h3 className="mb-3">Get Started Today!</h3>
           <p className="text-muted mb-4">Discover a smarter way to track, analyze, and personalize your reading experience with Booksy!</p>
-          <Button as={Link} to="/signup" size="lg" className="px-4" >
+          <Button as={Link} to="/signup" size="lg" className="px-4">
             Sign Up Now
           </Button>
         </Container>
