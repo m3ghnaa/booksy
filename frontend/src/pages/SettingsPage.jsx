@@ -188,7 +188,7 @@ const SettingsPage = () => {
           }
         `}
       </style>
-      <Navbar user={user} />
+      <Navbar user={user} onLogout={handleLogout} />
       <div className="container mt-5 pt-5">
         <h2 className="mb-4">Settings</h2>
         <form onSubmit={handleSubmit}>

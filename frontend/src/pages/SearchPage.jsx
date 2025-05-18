@@ -88,7 +88,7 @@ const SearchPage = () => {
 
   return (
     <>
-      <Navbar user={profile} />
+      <Navbar user={profile} onLogout={handleLogout}/>
       <div className="container mt-5 pt-5">
         <div className="card">
           <div className="card-header bg-secondary text-white">
